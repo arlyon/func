@@ -23,4 +23,3 @@ begin
         write 0;
     endif;
 endmethod;
-

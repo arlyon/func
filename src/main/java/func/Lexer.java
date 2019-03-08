@@ -14,9 +14,9 @@ public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
 
     private FileToken current;
 
-
     /**
      * Creates a new Lexer.
+     *
      * @param in the java.io.Reader to read input from.
      */
     Lexer(Reader in) {
@@ -24,14 +24,25 @@ public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
         this.current = null;
     }
 
+    /**
+     * Increment the lexer, ignoring whitespace.
+     */
+    private FileToken lex() {
+        FileToken ft = null;
+        try {
+            ft = this.yylex();
+            while (ft != null && ft.type == Token.Type.WHITESPACE) {
+                ft = this.yylex();
+            }
+        } catch (IOException ignore) {
+        }
+        return ft;
+    }
+
     @Override
     public boolean hasNext() {
         if (this.current == null) {
-            try {
-                this.current = this.yylex();
-            } catch (IOException e) {
-                return false;
-            }
+            this.current = lex();
         }
 
         return this.current != null;
@@ -44,12 +55,8 @@ public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
             next = this.current;
             this.current = null;
         } else {
-            try {
-                next = this.yylex();
-                if (next == null) throw new NoSuchElementException();
-            } catch (IOException ignored) {
-                throw new NoSuchElementException();
-            }
+            next = lex();
+            if (next == null) throw new NoSuchElementException();
         }
 
         return next;

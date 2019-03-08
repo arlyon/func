@@ -17,6 +17,7 @@ public class Token {
         RPAR,
         SEMI,
         COMMA,
+        WHITESPACE,
 
         METHOD,
         VARS,
