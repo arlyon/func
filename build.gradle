@@ -58,10 +58,9 @@ github {
     repo = rootProject.name
     token = System.env.GITHUB_TOKEN
     tagName = version
-    targetCommitish = version
     name = "Func Version ${version}"
     body = getChangelog(version)
-    assets = ["build/distributions/felling-${version}.zip"]
+    assets = ["build/distributions/func-${version}.zip"]
 }
 
 dependencies {
