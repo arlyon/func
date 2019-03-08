@@ -48,6 +48,6 @@ lesseq        { return token(Token.Type.LESSEQ); }
 eq        { return token(Token.Type.EQ); }
 neq        { return token(Token.Type.NEQ); }
 
-{whitespace}    { /* skip */ }
+{whitespace}    { return token(Token.Type.WHITESPACE); }
 {identifier}    { return token(Token.Type.IDENTIFIER); }
 {integer}   { return token(Token.Type.INT_LITERAL); }
