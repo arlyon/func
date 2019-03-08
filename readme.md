@@ -45,4 +45,4 @@ It is also possible to just run the program directly with the `run` command in g
 Functools uses Gradle for building and dependency management. You can see all the tasks available to you using the
 `./gradlew tasks` command. Some useful ones are `test`, `dependencies`, `run`, and `build`.
 
-The Lexer is created using JFlex, and the command line interface using Airline.
+The Lexer is created using JFlex, and the command line interface using picocli.

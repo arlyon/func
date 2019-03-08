@@ -64,7 +64,7 @@ github {
 }
 
 dependencies {
-    compile group: 'io.airlift', name: 'airline', version: '0.8'
+    compile 'info.picocli:picocli:3.9.5'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.0'
 
