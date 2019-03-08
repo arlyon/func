@@ -14,7 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
-@Command(name = "func", mixinStandardHelpOptions = true, version = "functools version 1.0.0")
+@Command(name = "func", mixinStandardHelpOptions = true, version = "functools version 1.1.0")
 public class Func implements Callable<Void> {
     public static void main(String[] args) {
         CommandLine.call(new Func(), args);

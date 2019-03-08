@@ -1,3 +1,10 @@
+version 1.1.0
+
+    - simplify io
+    - support input from stdin
+    - replace airlift with picocli
+    - add validate command
+
 version 1.0.0
 
     - implement lexer using JFlex
