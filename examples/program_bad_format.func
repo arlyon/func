@@ -1,0 +1,20 @@
+method pow(x, y) vars i, res
+begin
+    res := x;
+    i := 1;
+    while less(i,y)
+    begin
+        res := times(res,x);
+        i := plus(i,1);
+    endwhile;
+    write res;
+    return res;
+endmethod;
+
+method main() vars a, b, x
+begin
+    a := 5;
+    b := 2;
+    x := pow(b,a);
+    if  eq(x,32) then write 1; else write 0; endif;
+endmethod;

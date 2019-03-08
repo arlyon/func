@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'application'
+    id "co.riiid.gradle" version "0.4.2"
+    id "org.xbib.gradle.plugin.jflex" version "1.1.0"
+}
+
+group 'arlyon'
+version '1.0.0'
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClassName = 'func.Func'
+}
+
+task readme(type: Copy) {
+    from file("readme.md")
+    into file("$buildDir/readme.md")
+}
+
+// helper function to extract changelog data for a specific version
+ext.getChangelog = { version ->
+    String changelog = file('./changelog.txt').text
+    def lines = []
+    def complete = null
+
+    changelog.eachLine { line ->
+        if (line =~ "version ${version}") {
+            complete = false
+        } else if (line =~ /version/) {
+            complete = true
+        } else if (!complete && line != "") {
+            lines.push(line.replaceFirst(" {4}", ""))
+        }
+    }
+
+    return lines.join("\n")
+}
+
+distributions {
+    main {
+        contents {
+            from(readme) {
+                into '.'
+            }
+        }
+    }
+}
+
+// --- github release ---
+github {
+    owner = group
+    repo = rootProject.name
+    token = System.env.GITHUB_TOKEN
+    tagName = version
+    targetCommitish = version
+    name = "Func Version ${version}"
+    body = getChangelog(version)
+    assets = ["build/distributions/felling-${version}.zip"]
+}
+
+dependencies {
+    compile group: 'io.airlift', name: 'airline', version: '0.8'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.4.0'
+
+    compileOnly group: 'de.jflex', name: 'jflex', version: '1.7.0'
+    compileOnly 'org.projectlombok:lombok:1.18.6'
+    annotationProcessor 'org.projectlombok:lombok:1.18.6'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}

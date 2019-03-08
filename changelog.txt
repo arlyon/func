@@ -1,0 +1,6 @@
+version 1.0.0
+
+    - implement lexer using JFlex
+    - implement recursive descent parser / AST
+    - implement ASTPrinter visitor (with indentation support)
+    - implement simple command line program format func files
