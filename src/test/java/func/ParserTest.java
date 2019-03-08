@@ -72,7 +72,7 @@ class ParserTest {
     @ParameterizedTest
     @ValueSource(strings = {program1, program2, program3})
     void test(String string) throws BadSyntax {
-        Iterator<FileToken> symbols = new Lexer(new StringReader(string));
+        Iterator<Token> symbols = new Lexer(new StringReader(string));
         Parser p = new Parser(symbols);
         Program program = p.program();
         ASTPrinter printer = new ASTPrinter();

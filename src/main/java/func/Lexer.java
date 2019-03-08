@@ -10,9 +10,9 @@ import java.util.NoSuchElementException;
  * iterator interface. Also acts as an isolation
  * point between JFlex and the rest of the program.
  */
-public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
+public class Lexer extends func.JFlexLexer implements Iterator<Token> {
 
-    private FileToken current;
+    private Token current;
 
     /**
      * Creates a new Lexer.
@@ -27,8 +27,8 @@ public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
     /**
      * Increment the lexer, ignoring whitespace.
      */
-    private FileToken lex() {
-        FileToken ft = null;
+    private Token lex() {
+        Token ft = null;
         try {
             ft = this.yylex();
             while (ft != null && ft.type == Token.Type.WHITESPACE) {
@@ -49,8 +49,8 @@ public class Lexer extends func.JFlexLexer implements Iterator<FileToken> {
     }
 
     @Override
-    public FileToken next() {
-        FileToken next;
+    public Token next() {
+        Token next;
         if (this.current != null) {
             next = this.current;
             this.current = null;

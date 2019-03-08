@@ -12,17 +12,27 @@ import func.syntax.statement.rw.Write;
 
 import java.util.*;
 
+/**
+ * Parses a {@link Token} iterator building a
+ * valid AST for the Func language. Any syntax errors
+ * will raise a BadSyntax error with an appropriate message.
+ */
 public class Parser {
 
-    private final List<FileToken> tokens;
-    private final ListIterator<FileToken> iterator;
+    private final List<Token> tokens;
+    private final ListIterator<Token> iterator;
 
-    public Parser(Iterator<FileToken> tokens) {
+    public Parser(Iterator<Token> tokens) {
         this.tokens = new ArrayList<>();
         tokens.forEachRemaining(this.tokens::add);
         this.iterator = this.tokens.listIterator();
     }
 
+    /**
+     * Gives a list of token types, takes them in that order
+     * from the token iterator and asserts they are of the
+     * correct type.
+     */
     private void take(Token.Type... tokens) throws BadSyntax {
         Token actual;
         for (Token.Type expected : tokens) {
@@ -34,12 +44,27 @@ public class Parser {
         }
     }
 
+    /**
+     * Signifies an optional part of the grammar using an HOF.
+     * <p>
+     * For example:
+     * {@code take(Token.Type.LPAR); optional(() -> take(Token.Type.COMMA)); take(Token.Type.RPAR)}
+     * matches both {@code (,)} and {@code ()}.
+     */
     private <T> T optional(OptionalSyntax<T> func) {
         try {
             return func.apply();
         } catch (BadSyntax e) {
             return null;
         }
+    }
+
+    /**
+     * Defines the type of functions that can be used in the optional HOF.
+     */
+    @FunctionalInterface
+    public interface OptionalSyntax<T> {
+        T apply() throws BadSyntax;
     }
 
     public Program program() throws BadSyntax {
@@ -66,28 +91,31 @@ public class Parser {
     private Method method() throws BadSyntax {
         this.take(Token.Type.METHOD);
         Identifier id = this.identifier();
-        this.take(Token.Type.LPAR);
 
+        this.take(Token.Type.LPAR);
         Arguments args = this.optional(this::arguments);
         this.take(Token.Type.RPAR);
 
-        Arguments vars = this.optional(() -> {
-            this.take(Token.Type.VARS);
-            return this.arguments();
-        });
+        Arguments vars = this.optional(this::vars);
 
         this.take(Token.Type.BEGIN);
         Statements statements = this.statements();
-
-        Identifier ret = this.optional(() -> {
-            this.take(Token.Type.RETURN);
-            Identifier out = this.identifier();
-            this.take(Token.Type.SEMI);
-            return out;
-        });
-
+        Identifier ret = this.optional(this::ret);
         this.take(Token.Type.ENDMETHOD, Token.Type.SEMI);
+
         return new Method(id, args, vars, statements, ret);
+    }
+
+    private Identifier ret() throws BadSyntax {
+        this.take(Token.Type.RETURN);
+        Identifier out = this.identifier();
+        this.take(Token.Type.SEMI);
+        return out;
+    }
+
+    private Arguments vars() throws BadSyntax {
+        this.take(Token.Type.VARS);
+        return this.arguments();
     }
 
     private Statements statements() throws BadSyntax {
@@ -126,10 +154,7 @@ public class Parser {
                 cond = this.cond();
                 this.take(Token.Type.THEN);
                 Statements then = this.statements();
-                Statements otherwise = this.optional(() -> {
-                    this.take(Token.Type.ELSE);
-                    return this.statements();
-                });
+                Statements otherwise = this.optional(this::otherwise);
                 this.take(Token.Type.ENDIF);
                 return new If(cond, then, otherwise);
             case WHILE:
@@ -142,6 +167,11 @@ public class Parser {
             default:
                 throw new BadSyntax("Not a valid statement", next);
         }
+    }
+
+    private Statements otherwise() throws BadSyntax {
+        this.take(Token.Type.ELSE);
+        return this.statements();
     }
 
     private Condition cond() throws BadSyntax {
@@ -173,22 +203,24 @@ public class Parser {
         this.iterator.previous();
         switch (t) {
             case IDENTIFIER:
-                return this.unkExpression();
+                return this.functionExpression();
             case INT_LITERAL:
                 return this.intExpression();
         }
         return null;
     }
 
-    private FunctionExpression unkExpression() throws BadSyntax {
+    private FunctionExpression functionExpression() throws BadSyntax {
         Identifier x = this.identifier();
-        Expressions exps = this.optional(() -> {
-            this.take(Token.Type.LPAR);
-            Expressions e = this.expressions();
-            this.take(Token.Type.RPAR);
-            return e;
-        });
+        Expressions exps = this.optional(this::functionApplication);
         return new FunctionExpression(x, exps);
+    }
+
+    private Expressions functionApplication() throws BadSyntax {
+        this.take(Token.Type.LPAR);
+        Expressions e = this.expressions();
+        this.take(Token.Type.RPAR);
+        return e;
     }
 
     private Expressions expressions() throws BadSyntax {
@@ -205,7 +237,7 @@ public class Parser {
     }
 
     private IntExpression intExpression() throws BadSyntax {
-        FileToken t = this.iterator.next();
+        Token t = this.iterator.next();
         if (t.type != Token.Type.INT_LITERAL) {
             throw new BadSyntax("Expected int, not ", t);
         }
@@ -224,16 +256,11 @@ public class Parser {
     }
 
     private Identifier identifier() throws BadSyntax {
-        FileToken token = this.iterator.next();
+        Token token = this.iterator.next();
         if (token.type != Token.Type.IDENTIFIER) {
             this.iterator.previous();
             throw new BadSyntax("Expected identifier, not ", token);
         }
         return new Identifier(token.value);
-    }
-
-    @FunctionalInterface
-    public interface OptionalSyntax<T> {
-        T apply() throws BadSyntax;
     }
 }

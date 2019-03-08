@@ -1,6 +1,6 @@
 package func;
 
-import func.FileToken;
+import func.Token;
 
 %%
 
@@ -8,11 +8,11 @@ import func.FileToken;
 %unicode
 %line
 %column
-%type FileToken
+%type Token
 
 %{
-  public FileToken token(Token.Type type) {
-    return new FileToken(type, yytext(), yycolumn, yyline, yylength());
+  public Token token(Token.Type type) {
+    return new Token(type, yytext(), yycolumn, yyline, yylength());
   }
 %}
 
