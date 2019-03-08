@@ -9,6 +9,13 @@ public class Token {
 
     public final Type type;
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder()
+            .append(this.type).append(" ");
+        return builder.toString();
+    }
+
     public enum Type {
         IDENTIFIER,
         INT_LITERAL,
@@ -37,12 +44,5 @@ public class Token {
         LESSEQ,
         EQ,
         NEQ
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder()
-            .append(this.type).append(" ");
-        return builder.toString();
     }
 }

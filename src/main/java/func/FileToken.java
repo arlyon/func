@@ -21,7 +21,7 @@ public class FileToken extends Token {
             .append(this.type).append(" ");
         if (this.value != null) builder.append(this.value);
         builder.append(" [").append(this.row).append(":").append(this.column);
-        builder.append("-").append(this.column+this.length);
+        builder.append("-").append(this.column + this.length);
         builder.append("]");
         return builder.toString();
     }
