@@ -3,8 +3,6 @@ package func;
 import func.syntax.Program;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Help.Ansi;
-import picocli.CommandLine.Help.ColorScheme;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 

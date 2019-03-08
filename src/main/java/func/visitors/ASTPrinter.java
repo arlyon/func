@@ -16,10 +16,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ASTPrinter implements ASTVisitor {
 
+    final int indentation = 4;
     private int depth = 0;
     private StringBuilder builder = new StringBuilder();
-
-    final int indentation = 4;
 
     public String toString() {
         return builder.toString();
@@ -93,7 +92,7 @@ public class ASTPrinter implements ASTVisitor {
             visit(expression);
             builder.append(", ");
         }
-        builder.delete(builder.length()-2, builder.length());
+        builder.delete(builder.length() - 2, builder.length());
     }
 
     @Override

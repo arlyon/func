@@ -4,8 +4,8 @@ import func.syntax.*;
 import func.syntax.bop.*;
 import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
-import func.syntax.exp.IntExpression;
 import func.syntax.exp.FunctionExpression;
+import func.syntax.exp.IntExpression;
 import func.syntax.statement.*;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
@@ -16,11 +16,6 @@ public class Parser {
 
     private final List<FileToken> tokens;
     private final ListIterator<FileToken> iterator;
-
-    @FunctionalInterface
-    public interface OptionalSyntax<T> {
-        T apply() throws BadSyntax;
-    }
 
     public Parser(Iterator<FileToken> tokens) {
         this.tokens = new ArrayList<>();
@@ -235,5 +230,10 @@ public class Parser {
             throw new BadSyntax("Expected identifier, not ", token);
         }
         return new Identifier(token.value);
+    }
+
+    @FunctionalInterface
+    public interface OptionalSyntax<T> {
+        T apply() throws BadSyntax;
     }
 }
