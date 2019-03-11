@@ -1,9 +1,12 @@
 package func.syntax.exp;
 
+import func.SyntaxError;
 import func.syntax.ASTVisitor;
 import func.syntax.Identifier;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
+
+import java.util.List;
 
 @AllArgsConstructor
 public class FunctionExpression extends Expression {

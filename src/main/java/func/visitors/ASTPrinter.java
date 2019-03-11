@@ -79,11 +79,7 @@ public class ASTPrinter implements ASTVisitor {
     }
 
     public void visit(Expression expression) {
-        if (expression instanceof IntExpression) {
-            visit((IntExpression) expression);
-        } else if (expression instanceof FunctionExpression) {
-            visit((FunctionExpression) expression);
-        }
+        expression.accept(this);
     }
 
     @Override
@@ -113,17 +109,10 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(Statements statements) {
         for (Statement statement : statements.statements) {
-            if (statement instanceof Assign) {
-                this.visit((Assign) statement);
-            } else if (statement instanceof While) {
-                this.visit((While) statement);
-            } else if (statement instanceof If) {
-                this.visit((If) statement);
-            } else if (statement instanceof Read) {
-                this.visit((Read) statement);
-            } else if (statement instanceof Write) {
-                this.visit((Write) statement);
-            }
+            if (statement == null)
+                builder.append("<invalid>");
+            else
+                statement.accept(this);
             this.builder.append(";\n");
         }
     }

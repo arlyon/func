@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
  * The base token type for the Func programming language.
  * <p>
  * Also contains some additional data about where it was
- * encountered such as the column, row, value, and length
+ * encountered such as the column, row, lexeme, and length
  * of the token.
  */
 @EqualsAndHashCode
@@ -17,19 +17,27 @@ import lombok.RequiredArgsConstructor;
 public class Token {
 
     public final Type type;
-    String value;
+    String lexeme;
     int column;
     int row;
     int length;
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder()
-            .append(this.type).append(" ");
-        if (this.value != null) builder.append(this.value);
-        builder.append(" [").append(this.row).append(":").append(this.column);
-        builder.append("-").append(this.column + this.length);
-        builder.append("]");
+        return this.toString(false);
+    }
+
+    public String toString(boolean withLocation) {
+        StringBuilder builder = new StringBuilder();
+
+        if (this.lexeme != null && this.lexeme.length() > 0) builder.append(this.lexeme);
+        else builder.append(this.type);
+
+        if (withLocation) {
+            builder.append(" [").append(this.row).append(":").append(this.column);
+            builder.append("-").append(this.column + this.length);
+            builder.append("]");
+        }
         return builder.toString();
     }
 
@@ -42,6 +50,8 @@ public class Token {
         SEMI,
         COMMA,
         WHITESPACE,
+        EOF,
+        UNK,
 
         METHOD,
         VARS,
@@ -60,6 +70,15 @@ public class Token {
         LESS,
         LESSEQ,
         EQ,
-        NEQ
+        NEQ;
+
+        public boolean endsStatement() {
+            return this == Type.RETURN ||
+                this == Type.ENDMETHOD ||
+                this == Type.ENDWHILE ||
+                this == Type.ENDIF ||
+                this == Type.ELSE ||
+                this == Type.EOF;
+        }
     }
 }

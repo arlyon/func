@@ -12,7 +12,9 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * The command line interface to the Functools program.
@@ -41,23 +43,8 @@ public class Func implements Callable<Void> {
         @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile,
         @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file") File outFile
     ) {
-        InputStream in = null;
-        try {
-            in = inFile != null ? new FileInputStream(inFile) : System.in;
-        } catch (FileNotFoundException e) {
-            System.err.println("Error with your file: " + e.getLocalizedMessage());
-            System.exit(1);
-        }
-
-        Lexer symbols = new Lexer(new InputStreamReader(in));
-        Parser p = new Parser(symbols);
-        Program program = null;
-        try {
-            program = p.program();
-        } catch (BadSyntax e) {
-            System.err.println("Could not parse program! " + e);
-            System.exit(1);
-        }
+        InputStream in = getInputStream(inFile);
+        Program program = parseProgram(in);
 
         try {
             Writer out = outFile != null ? new FileWriter(outFile) : new OutputStreamWriter(System.out);
@@ -79,7 +66,36 @@ public class Func implements Callable<Void> {
     void validate(
         @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile
     ) throws NoSuchAlgorithmException {
+        InputStream in = getInputStream(inFile);
+        DigestInputStream digestStream = new DigestInputStream(in, MessageDigest.getInstance("SHA-256"));
+        Program program = parseProgram(digestStream);
 
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        for (byte aByte : program.toString().getBytes()) md.update(aByte);
+
+        byte[] dig = digestStream.getMessageDigest().digest();
+        byte[] dig2 = md.digest();
+
+        System.out.println("source:    " + String.format("%0" + (dig.length << 1) + "x", new BigInteger(1, dig)));
+        System.out.println("formatted: " + String.format("%0" + (dig2.length << 1) + "x", new BigInteger(1, dig2)));
+        System.exit(Arrays.equals(dig, dig2) ? 0 : 1);
+    }
+
+    private Program parseProgram(InputStream stream) {
+        Lexer symbols = new Lexer(new InputStreamReader(stream));
+        Parser p = new Parser(symbols);
+        Program program = p.program();
+
+        if (p.hasErrors()) {
+            System.err.println("There are syntax errors with your program.");
+            System.err.println(p.getErrors().stream().map(Objects::toString).collect(Collectors.joining("\n")));
+            System.exit(1);
+        }
+
+        return program;
+    }
+
+    private InputStream getInputStream(File inFile) {
         InputStream in = null;
         try {
             in = inFile != null ? new FileInputStream(inFile) : System.in;
@@ -87,34 +103,6 @@ public class Func implements Callable<Void> {
             System.err.println("Error with your file: " + e.getLocalizedMessage());
             System.exit(1);
         }
-
-        DigestInputStream digestStream = new DigestInputStream(in, MessageDigest.getInstance("SHA-256"));
-
-        Lexer symbols = new Lexer(new InputStreamReader(digestStream));
-        Parser p = new Parser(symbols);
-        Program program = null;
-        try {
-            program = p.program();
-        } catch (BadSyntax e) {
-            System.err.println("Could not parse program! " + e);
-            System.exit(1);
-        }
-
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        for (byte aByte : program.toString().getBytes()) {
-            md.update(aByte);
-        }
-
-        byte[] dig = digestStream.getMessageDigest().digest();
-        byte[] dig2 = md.digest();
-
-        System.out.println("source:    " + String.format("%0" + (dig.length << 1) + "x", new BigInteger(1, dig)));
-        System.out.println("formatted: " + String.format("%0" + (dig2.length << 1) + "x", new BigInteger(1, dig2)));
-
-        if (!Arrays.equals(dig, dig2)) {
-            System.exit(1);
-        } else {
-            System.exit(0);
-        }
+        return in;
     }
 }

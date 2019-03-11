@@ -1,0 +1,10 @@
+method main() vars a, b, x
+begin
+    a := 5;
+    b := 2;
+    x := pow(b, a);
+    if eq(x,
+    endif;
+endmethod;
+
+method hi(x, 1) begin x := 1

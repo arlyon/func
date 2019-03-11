@@ -12,7 +12,8 @@ import java.util.NoSuchElementException;
  */
 public class Lexer extends func.JFlexLexer implements Iterator<Token> {
 
-    private Token current;
+    private Token peek;
+    private boolean eof;
 
     /**
      * Creates a new Lexer.
@@ -21,44 +22,42 @@ public class Lexer extends func.JFlexLexer implements Iterator<Token> {
      */
     Lexer(Reader in) {
         super(in);
-        this.current = null;
+        this.peek = null;
+        this.eof = false;
     }
 
     /**
      * Increment the lexer, ignoring whitespace.
      */
     private Token lex() {
-        Token ft = null;
         try {
-            ft = this.yylex();
-            while (ft != null && ft.type == Token.Type.WHITESPACE) {
-                ft = this.yylex();
-            }
-        } catch (IOException ignore) {
+            Token ft = this.yylex();
+            while (ft != null && ft.type == Token.Type.WHITESPACE) ft = this.yylex();
+            if (ft.type == Token.Type.EOF) this.eof = true;
+            return ft;
+        } catch (IOException e) {
+            System.out.println(e.toString());
+            System.exit(1);
+            return null;
         }
-        return ft;
     }
 
     @Override
     public boolean hasNext() {
-        if (this.current == null) {
-            this.current = lex();
-        }
-
-        return this.current != null;
+        if (this.eof) return false;
+        if (this.peek == null) this.peek = lex();
+        return true;
     }
 
     @Override
     public Token next() {
-        Token next;
-        if (this.current != null) {
-            next = this.current;
-            this.current = null;
-        } else {
-            next = lex();
-            if (next == null) throw new NoSuchElementException();
+        if (this.peek != null) {
+            Token next = this.peek;
+            this.peek = null;
+            return next;
         }
 
-        return next;
+        if (this.eof) throw new NoSuchElementException();
+        else return lex();
     }
 }

@@ -7,10 +7,7 @@ import func.syntax.bop.NEq;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
 import func.syntax.exp.IntExpression;
-import func.syntax.statement.Assign;
-import func.syntax.statement.If;
-import func.syntax.statement.Statements;
-import func.syntax.statement.While;
+import func.syntax.statement.*;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
