@@ -1,6 +1,7 @@
 package func.syntax;
 
 import func.visitors.ASTPrinter;
+import func.visitors.ASTVisitor;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class Arguments extends AST {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

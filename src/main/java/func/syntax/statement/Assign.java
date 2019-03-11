@@ -1,6 +1,6 @@
 package func.syntax.statement;
 
-import func.syntax.ASTVisitor;
+import func.visitors.ASTVisitor;
 import func.syntax.Identifier;
 import func.syntax.exp.Expression;
 import func.visitors.ASTPrinter;
@@ -20,7 +20,7 @@ public class Assign extends Statement {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

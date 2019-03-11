@@ -1,6 +1,6 @@
 package func.syntax.statement;
 
-import func.syntax.ASTVisitor;
+import func.visitors.ASTVisitor;
 import func.syntax.Condition;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ public class If extends Statement {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

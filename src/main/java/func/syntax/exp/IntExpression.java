@@ -1,6 +1,6 @@
 package func.syntax.exp;
 
-import func.syntax.ASTVisitor;
+import func.visitors.ASTVisitor;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
 
@@ -16,7 +16,7 @@ public class IntExpression extends Expression {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

@@ -65,6 +65,8 @@ github {
 
 dependencies {
     compile 'info.picocli:picocli:3.9.5'
+    compile group: 'com.github.jknack', name: 'handlebars', version: '4.1.2'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-beta4'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.0'
 

@@ -1,7 +1,7 @@
 package func.syntax.statement;
 
 import func.syntax.AST;
-import func.syntax.ASTVisitor;
+import func.visitors.ASTVisitor;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
 
@@ -20,7 +20,7 @@ public class Statements extends AST {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

@@ -1,11 +1,17 @@
 package func;
 
 import func.syntax.Program;
+import func.visitors.JavaTranspiler;
+import func.visitors.MIPSCompiler;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import javax.tools.ToolProvider;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.DigestInputStream;
@@ -45,15 +51,7 @@ public class Func implements Callable<Void> {
     ) {
         InputStream in = getInputStream(inFile);
         Program program = parseProgram(in);
-
-        try {
-            Writer out = outFile != null ? new FileWriter(outFile) : new OutputStreamWriter(System.out);
-            out.write(program.toString());
-            out.close();
-        } catch (IOException e) {
-            System.err.println("Could not write to file: " + e.getLocalizedMessage());
-            System.exit(1);
-        }
+        writeStringToOutput(outFile, program.toString());
     }
 
     @Command(
@@ -81,6 +79,67 @@ public class Func implements Callable<Void> {
         System.exit(Arrays.equals(dig, dig2) ? 0 : 1);
     }
 
+    @Command(
+        name = "compile",
+        description = "Compiles the provided source code into a lower level representation.",
+        parameterListHeading = "%nParameters:%n",
+        optionListHeading = "%nOptions:%n"
+    )
+    void compile(
+        @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile,
+        @Option(names = "-o", required = true, paramLabel = "<outfile>", description = "direct output to file. if exporting a JVM file, the extension will be stripped") File outFile,
+        @Option(names = "-t", paramLabel = "<format>", description = "the format of the output: ${COMPLETION-CANDIDATES} (defaults to MIPS)", defaultValue = "MIPS") OutputFormat outputFormat
+    ) {
+        InputStream in = getInputStream(inFile);
+        Program program = parseProgram(in);
+
+        String outputCode = null;
+        switch (outputFormat) {
+//            case MIPS:
+//                MIPSCompiler mc = new MIPSCompiler();
+//                mc.visit(program);
+//                outputCode = mc.toString();
+//                break;
+            case JVM:
+            case JAVA:
+                String fileName = outFile.getName().contains(".") ? outFile.getName().split("\\.")[0] : outFile.getName();
+                JavaTranspiler jc = new JavaTranspiler(fileName);
+                outputCode = jc.visit(program);
+                if (outputFormat == OutputFormat.JVM) {
+                    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+                    JavaTranspiler.JavaSource source = new JavaTranspiler.JavaSource(fileName, outputCode);
+                    String[] options = new String[] { "-d", outFile.getAbsoluteFile().getParent() };
+                    Iterable<? extends JavaFileObject> fileObjects = Arrays.asList(source);
+                    StringWriter output = new StringWriter();
+                    boolean succ = compiler.getTask(output, null, null, Arrays.asList(options), null, fileObjects).call();
+                    if (!succ) {
+                        System.err.println(output.toString());
+                        System.exit(1);
+                    } else {
+                        System.exit(0);
+                    }
+                    outputCode = output.toString();
+                }
+                break;
+            default:
+                System.err.println("Unrecognised option.");
+                System.exit(1);
+        }
+
+        writeStringToOutput(outFile, outputCode);
+    }
+
+    private void writeStringToOutput(File outFile, String outputCode) {
+        try {
+            Writer out = outFile != null ? new FileWriter(outFile) : new OutputStreamWriter(System.out);
+            out.write(outputCode);
+            out.close();
+        } catch (IOException e) {
+            System.err.println("Could not write to file: " + e.getLocalizedMessage());
+            System.exit(1);
+        }
+    }
+
     private Program parseProgram(InputStream stream) {
         Lexer symbols = new Lexer(new InputStreamReader(stream));
         Parser p = new Parser(symbols);
@@ -104,5 +163,9 @@ public class Func implements Callable<Void> {
             System.exit(1);
         }
         return in;
+    }
+
+    private enum OutputFormat {
+        JVM, JAVA
     }
 }

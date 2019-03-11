@@ -3,6 +3,7 @@ package func.syntax;
 import func.syntax.bop.BinaryOp;
 import func.syntax.exp.Expressions;
 import func.visitors.ASTPrinter;
+import func.visitors.ASTVisitor;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -18,7 +19,7 @@ public class Condition extends AST {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

@@ -1,6 +1,6 @@
 package func.syntax.statement.rw;
 
-import func.syntax.ASTVisitor;
+import func.visitors.ASTVisitor;
 import func.syntax.Identifier;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ public class Read extends ReadWrite {
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        visitor.visit(this);
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

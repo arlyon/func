@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class ASTPrinter implements ASTVisitor {
+public class ASTPrinter implements ASTVisitor<Void> {
 
     final int indentation = 4;
     private int depth = 0;
@@ -31,15 +31,16 @@ public class ASTPrinter implements ASTVisitor {
     }
 
     @Override
-    public void visit(Assign assign) {
+    public Void visit(Assign assign) {
         indent("");
         visit(assign.id);
         builder.append(" := ");
         visit(assign.expression);
+        return null;
     }
 
     @Override
-    public void visit(If anIf) {
+    public Void visit(If anIf) {
         indent("if ").append(anIf.cond).append("\n");
         indent("then\n");
         depth += 1;
@@ -52,10 +53,11 @@ public class ASTPrinter implements ASTVisitor {
             depth -= 1;
         }
         indent("endif");
+        return null;
     }
 
     @Override
-    public void visit(While aWhile) {
+    public Void visit(While aWhile) {
         indent("while ");
         visit(aWhile.cond);
         builder.append("\n");
@@ -64,50 +66,57 @@ public class ASTPrinter implements ASTVisitor {
         visit(aWhile.statements);
         depth -= 1;
         indent("endwhile");
+        return null;
     }
 
     @Override
-    public void visit(Read read) {
+    public Void visit(Read read) {
         indent("read ");
         visit(read.id);
+        return null;
     }
 
     @Override
-    public void visit(Write write) {
+    public Void visit(Write write) {
         indent("write ");
         visit(write.exp);
+        return null;
     }
 
-    public void visit(Expression expression) {
+    public Void visit(Expression expression) {
         expression.accept(this);
+        return null;
     }
 
     @Override
-    public void visit(Expressions expressions) {
+    public Void visit(Expressions expressions) {
         for (Expression expression : expressions.expressions) {
             visit(expression);
             builder.append(", ");
         }
         builder.delete(builder.length() - 2, builder.length());
+        return null;
     }
 
     @Override
-    public void visit(IntExpression intExpression) {
+    public Void visit(IntExpression intExpression) {
         builder.append(intExpression.integer);
+        return null;
     }
 
     @Override
-    public void visit(FunctionExpression functionExpression) {
+    public Void visit(FunctionExpression functionExpression) {
         visit(functionExpression.id);
         if (functionExpression.expressions != null) {
             builder.append("(");
             visit(functionExpression.expressions);
             builder.append(")");
         }
+        return null;
     }
 
     @Override
-    public void visit(Statements statements) {
+    public Void visit(Statements statements) {
         for (Statement statement : statements.statements) {
             if (statement == null)
                 builder.append("<invalid>");
@@ -115,57 +124,66 @@ public class ASTPrinter implements ASTVisitor {
                 statement.accept(this);
             this.builder.append(";\n");
         }
+        return null;
     }
 
     @Override
-    public void visit(Eq eq) {
+    public Void visit(Eq eq) {
         visit((BinaryOp) eq);
+        return null;
     }
 
     @Override
-    public void visit(Less less) {
+    public Void visit(Less less) {
         visit((BinaryOp) less);
+        return null;
     }
 
     @Override
-    public void visit(LessEq lessEq) {
+    public Void visit(LessEq lessEq) {
         visit((BinaryOp) lessEq);
+        return null;
     }
 
     @Override
-    public void visit(NEq nEq) {
+    public Void visit(NEq nEq) {
         visit((BinaryOp) nEq);
+        return null;
     }
 
-    public void visit(BinaryOp eq) {
+    public Void visit(BinaryOp eq) {
         String name = eq.getClass().getSimpleName();
         builder.append(name.substring(0, 1).toLowerCase()).append(name.substring(1));
+        return null;
     }
 
     @Override
-    public void visit(Arguments arguments) {
+    public Void visit(Arguments arguments) {
         for (Identifier identifier : arguments.identifiers) {
             visit(identifier);
             builder.append(", ");
         }
         builder.delete(builder.length() - 2, builder.length());
+        return null;
     }
 
     @Override
-    public void visit(Condition condition) {
+    public Void visit(Condition condition) {
         visit(condition.bop);
         builder.append("(");
         visit(condition.exps);
         builder.append(")");
+        return null;
     }
 
     @Override
-    public void visit(Identifier identifier) {
+    public Void visit(Identifier identifier) {
         builder.append(identifier.name);
+        return null;
     }
 
     @Override
-    public void visit(Method method) {
+    public Void visit(Method method) {
         builder.append("method ");
         this.visit(method.id);
         builder.append("(");
@@ -186,19 +204,22 @@ public class ASTPrinter implements ASTVisitor {
         }
         this.depth -= 1;
         builder.append("endmethod");
+        return null;
     }
 
     @Override
-    public void visit(Methods methods) {
+    public Void visit(Methods methods) {
         for (Method method : methods.methods) {
             visit(method);
             builder.append(";\n\n");
         }
         builder.delete(builder.length() - 1, builder.length());
+        return null;
     }
 
     @Override
-    public void visit(Program program) {
+    public Void visit(Program program) {
         this.visit(program.methods);
+        return null;
     }
 }
