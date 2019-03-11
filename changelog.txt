@@ -1,3 +1,10 @@
+version 1.2.0
+
+    - make program collect all parse errors
+    - try and parse as much as possible, returning whatever valid syntax it can
+    - list all syntax errors at once
+    - simplify syntax errors (make them more ergonomic)
+
 version 1.1.0
 
     - simplify io
