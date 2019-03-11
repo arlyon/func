@@ -53,4 +53,4 @@ neq             { return token(Token.Type.NEQ); }
 {integer}       { return token(Token.Type.INT_LITERAL); }
 
 <<EOF>>         { return token(Token.Type.EOF); }
-[^]+            { return token(Token.Type.UNK); }
+[^]            { return token(Token.Type.UNK); }

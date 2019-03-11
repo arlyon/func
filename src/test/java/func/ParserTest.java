@@ -21,6 +21,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Arguments a = p.arguments();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals(a.toString(), example);
     }
 
@@ -31,6 +32,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Arguments a = p.vars();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals("vars " + a.toString() + " begin", example);
     }
 
@@ -44,6 +46,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Arguments a = p.vars();
+        Assertions.assertEquals(1, p.getErrors().size());
         Assertions.assertNull(a);
     }
 
@@ -65,6 +68,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Method m = p.method();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals("main", m.id.name);
         Assertions.assertNull(m.args);
         Assertions.assertNull(m.vars);
@@ -79,6 +83,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Method m = p.method();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals(3, m.args.identifiers.size());
     }
 
@@ -89,6 +94,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Method m = p.method();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals(3, m.vars.identifiers.size());
     }
 
@@ -99,6 +105,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Method m = p.method();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals("x", m.ret.name);
     }
 
@@ -138,6 +145,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Method m = p.method();
+        Assertions.assertEquals(5, p.getErrors().size());
         Assertions.assertNull(m.id);
         Assertions.assertNull(m.args);
         Assertions.assertNull(m.vars);
@@ -151,6 +159,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Assign a = (Assign) p.statement();
+        Assertions.assertEquals(0, p.getErrors().size());
         Assertions.assertEquals("x := 1", a.toString());
     }
 
@@ -161,6 +170,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Statements a = p.statements();
+        Assertions.assertEquals(1, p.getErrors().size());
     }
 
 
@@ -180,6 +190,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Statements s = p.statements();
+        Assertions.assertEquals(1, p.getErrors().size());
         Assertions.assertEquals(3, s.statements.size());
     }
 
@@ -190,6 +201,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         If s = (If) p.statement();
+        Assertions.assertEquals(1, p.getErrors().size());
         Assertions.assertEquals(null, s.otherwise);
         Assertions.assertEquals(1, s.then.statements.size());
     }
@@ -201,6 +213,7 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Condition b = p.cond();
+        Assertions.assertEquals(1, p.getErrors().size());
         Assertions.assertEquals(Eq.class, b.bop.getClass());
         Assertions.assertEquals(1, b.exps.expressions.size());
     }
@@ -213,7 +226,18 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Condition b = p.cond();
+        Assertions.assertEquals(3, p.getErrors().size());
         Assertions.assertNull(b.bop);
         Assertions.assertEquals(1, b.exps.expressions.size());
+    }
+
+    @Test
+    public void testCond() {
+        String example = "eq(1, 1)";
+        Lexer l = new Lexer(new StringReader(example));
+        Parser p = new Parser(l);
+
+        Condition b = p.cond();
+        Assertions.assertEquals(0, p.getErrors().size());
     }
 }
