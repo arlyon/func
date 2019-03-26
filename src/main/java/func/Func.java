@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * The command line interface to the Functools program.
  * Contains two commands, format and validate.
  */
-@Command(name = "func", mixinStandardHelpOptions = true, version = "functools version 1.3.0")
+@Command(name = "func", mixinStandardHelpOptions = true, version = "functools version 2.0.0")
 public class Func implements Callable<Void> {
 
     public static final AbstractList<Identifier> builtins = new ArrayList<>(Arrays.asList(
