@@ -54,7 +54,7 @@ public class Func implements Callable<Void> {
     )
     void format(
         @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile,
-        @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file") File outFile
+        @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file") String outFile
     ) {
         InputStream in = getInputStream(inFile);
         Program program = parseProgram(in);
@@ -94,11 +94,12 @@ public class Func implements Callable<Void> {
     )
     void compile(
         @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile,
-        @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file. if exporting a JVM file, the extension will be stripped") File outFile,
+        @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file. if exporting to JAVA or JVM, simply supply the class name.") String outFile,
         @Option(names = "-t", paramLabel = "<format>", description = "the format of the output: ${COMPLETION-CANDIDATES} (defaults to MIPS)", defaultValue = "MIPS") OutputFormat outputFormat
     ) {
         InputStream in = getInputStream(inFile);
         Program program = parseProgram(in);
+        JavaTranspiler jc;
 
         String outputCode = null;
         switch (outputFormat) {
@@ -107,36 +108,47 @@ public class Func implements Callable<Void> {
                 mc.visit(program);
                 outputCode = mc.toString();
                 break;
-            case JVM:
             case JAVA:
-                String fileName = outFile.getName().contains(".") ? outFile.getName().split("\\.")[0] : outFile.getName();
-                JavaTranspiler jc = new JavaTranspiler(fileName);
+                String className = outFile == null ? "Program" : outFile.split("\\.")[0];
+                jc = new JavaTranspiler(className);
                 outputCode = jc.visit(program);
-                if (outputFormat == OutputFormat.JVM) {
-                    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                    JavaTranspiler.JavaSource source = new JavaTranspiler.JavaSource(fileName, outputCode);
-                    String[] options = new String[]{"-d", outFile.getAbsoluteFile().getParent()};
-                    Iterable<? extends JavaFileObject> fileObjects = Collections.singletonList(source);
-                    StringWriter output = new StringWriter();
-                    boolean succ = compiler.getTask(output, null, null, Arrays.asList(options), null, fileObjects).call();
-                    if (!succ) {
-                        System.err.println(output.toString());
-                        System.exit(1);
-                    } else {
-                        System.exit(0);
-                    }
-                    outputCode = output.toString();
-                }
                 break;
-            default:
-                System.err.println("Unrecognised option.");
-                System.exit(1);
+            case JVM:
+                if (outFile == null) {
+                    System.err.println("Could not compile for JVM: JVM compile requires an outfile that is a valid java identifier (ie. \"Program\")\n");
+                    CommandLine.usage(this, System.err);
+                    System.exit(1);
+                }
+
+                if (!outFile.chars().allMatch(c -> Character.isJavaIdentifierPart((char) c))) {
+                    System.err.println("Could not compile for JVM: \""+outFile+"\" is not a valid Java identifier.");
+                    System.exit(1);
+                }
+
+                jc = new JavaTranspiler(outFile);
+                compileJVM(jc.visit(program), outFile);
+                break;
         }
 
         writeStringToOutput(outFile, outputCode);
     }
 
-    private void writeStringToOutput(File outFile, String outputCode) {
+    private void compileJVM(String sourceCode, String className) {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        JavaTranspiler.JavaSource source = new JavaTranspiler.JavaSource(className, sourceCode);
+        Iterable<? extends JavaFileObject> fileObjects = Collections.singletonList(source);
+        StringWriter output = new StringWriter();
+        boolean succ = compiler.getTask(output, null, null, null, null, fileObjects).call();
+        if (!succ) {
+            System.err.println(output.toString());
+            System.exit(1);
+        } else {
+            System.out.println("Compiled to "+className+".class");
+            System.exit(0);
+        }
+    }
+
+    private void writeStringToOutput(String outFile, String outputCode) {
         try {
             Writer out = outFile != null ? new FileWriter(outFile) : new OutputStreamWriter(System.out);
             out.write(outputCode);
