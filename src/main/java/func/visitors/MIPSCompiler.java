@@ -4,6 +4,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import func.Frame;
+import func.errors.SemanticError;
 import func.syntax.*;
 import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
@@ -15,13 +16,14 @@ import func.syntax.statement.Statements;
 import func.syntax.statement.While;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
-import func.errors.SemanticError;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import static func.Func.builtins;
 
 public class MIPSCompiler implements ASTVisitor<Void> {
 
@@ -49,7 +51,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
             return Arrays.stream(REGISTERS).flatMap(Arrays::stream).toArray(String[]::new);
         }
 
-        public static String get(int regNumber) {
+        public static String fromNumber(int regNumber) {
             String[] registers = registers();
             return Arrays.stream(registers).skip(regNumber).findFirst().orElse("$t" + (regNumber - registers.length + 10));
         }
@@ -101,14 +103,14 @@ public class MIPSCompiler implements ASTVisitor<Void> {
      */
     private void pushRegister(int r) {
         builder.append("\taddi $sp, $sp, -4\n"); // decrement the stack pointer by a word
-        builder.append(String.format("\tsw %s, 0($sp)\n", Registers.get(r))); // store it into the register
+        builder.append(String.format("\tsw %s, 0($sp)\n", Registers.fromNumber(r))); // store it into the register
     }
 
     /**
      * Pops a value off the stack (into the given register)
      */
     private void popRegister(int r) {
-        builder.append(String.format("\tlw %s, 0($sp)\n", Registers.get(r))); // load the stack pointer
+        builder.append(String.format("\tlw %s, 0($sp)\n", Registers.fromNumber(r))); // load the stack pointer
         builder.append("\taddi $sp, $sp, 4\n"); // increment it by a word
     }
 
@@ -124,6 +126,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     public Void visit(If cmd) {
         int labelNumber = this.labelCounter++;
 
+        builder.append("\t# if statement: ").append(cmd).append("\n");
         this.visit(cmd.cond);
         builder.append(", ").append("ift").append(labelNumber).append("\n");
         if (cmd.otherwise != null) {
@@ -140,6 +143,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     public Void visit(While cmd) {
         int labelNumber = this.labelCounter++;
 
+        builder.append("\t# while loop: ").append(cmd).append("\n");
         builder.append("wls").append(labelNumber).append(":\n");
         this.visit(cmd.cond);
         builder.append(", ").append("wle").append(labelNumber).append("\n");
@@ -161,15 +165,15 @@ public class MIPSCompiler implements ASTVisitor<Void> {
         // read the input
         builder.append("\tli $v0, ").append(SysCalls.READ_INT).append("\n");
         builder.append("\tsyscall\n");
-        builder.append("\tmove ").append(Registers.get(frame.find(cmd.id))).append(",").append("$v0").append("\n");
+        builder.append("\tmove ").append(Registers.fromNumber(frame.find(cmd.id))).append(",").append("$v0").append("\n");
         return null;
     }
 
     @Override
     public Void visit(Write cmd) {
         registerDestination = Registers.get(Registers.ARGUMENTS[0]);
-        cmd.exp.accept(this);
         builder.append("\tli $v0, " + SysCalls.PRINT_INT + "\n");
+        cmd.exp.accept(this);
         builder.append("\tsyscall\n");
         return null;
     }
@@ -184,7 +188,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
      */
     @Override
     public Void visit(IntExpression intExpression) {
-        builder.append("\tli ").append(Registers.get(registerDestination)).append(", ").append(intExpression.integer).append("\n");
+        builder.append("\tli ").append(Registers.fromNumber(registerDestination)).append(", ").append(intExpression.integer).append("\n");
         return null;
     }
 
@@ -196,16 +200,49 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(FunctionExpression functionExpression) {
         if (functionExpression.expressions != null) {
-            for (Expression e : functionExpression.expressions.expressions) {
-                builder.append("\tMOVE EXPRESSION TO INPUT ARGS\n");
-            }
-            builder.append("\tjal ").append(functionExpression.id).append("\n");
-            builder.append("\tmove $").append(Registers.get(registerDestination)).append(", $v0");
-            pushRegister(10);
+            if (builtins.contains(functionExpression.id)) handleBuiltin(functionExpression);
+            else handleFunction(functionExpression);
         } else {
-            builder.append("\tmove ").append(Registers.get(registerDestination)).append(", ").append(Registers.get(frame.find(functionExpression.id))).append("\n");
+            builder.append("\tmove ").append(Registers.fromNumber(registerDestination)).append(", ").append(Registers.fromNumber(frame.find(functionExpression.id))).append("\n");
         }
         return null;
+    }
+
+    private void handleFunction(FunctionExpression functionExpression) {
+        builder.append("\t# function call: ").append(functionExpression).append("\n");
+        int destination = registerDestination;
+        for (int i = 0; i < functionExpression.expressions.expressions.size(); i++) {
+            Expression e = functionExpression.expressions.expressions.get(i);
+            registerDestination = Registers.get(Registers.ARGUMENTS[i]);
+            e.accept(this);
+        }
+        registerDestination = destination;
+        builder.append("\tjal ").append(functionExpression.id).append("\n");
+        builder.append("\tmove ").append(Registers.fromNumber(registerDestination)).append(", ").append(Registers.RETURN[0]).append("\n");
+    }
+
+    private void handleBuiltin(FunctionExpression functionExpression) {
+        String command = null;
+        int originalDest = registerDestination;
+
+        String builtinName = functionExpression.id.name;
+        switch (builtinName) {
+            case "plus": command = "add"; break;
+            case "times": command = "mult"; break;
+            case "divide": command = "div"; break;
+            case "minus": command = "sub"; break;
+        }
+
+        // we know from type checking that there are always 2 arguments
+        registerDestination = Registers.get(Registers.EVAL[0]);
+        functionExpression.expressions.expressions.get(0).accept(this);
+        registerDestination = Registers.get(Registers.EVAL[1]);
+        functionExpression.expressions.expressions.get(1).accept(this);
+        builder.append("\t").append(command)
+            .append(" ").append(Registers.fromNumber(originalDest))
+            .append(", ").append(Registers.EVAL[0])
+            .append(", ").append(Registers.EVAL[1])
+            .append("\n");
     }
 
     @Override
@@ -267,7 +304,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
 
         if (method.ret != null) {
             int register = frame.find(method.ret);
-            builder.append("\tmove $" + Registers.RETURN[0] + ", $" + Registers.get(register) + "\n");
+            builder.append("\tmove $" + Registers.RETURN[0] + ", $" + Registers.fromNumber(register) + "\n");
         }
 
         if (method.id.name.equals("main")) {

@@ -14,8 +14,8 @@ public class If extends Statement {
     @Override
     public String toString() {
         ASTPrinter p = new ASTPrinter();
-        p.visit(this);
-        return p.toString();
+        p.visit(cond);
+        return "if " + p.toString();
     }
 
     @Override

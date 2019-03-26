@@ -19,7 +19,7 @@ class MIPSCompilerTest {
 
     @Test
     void testThis() {
-        assertEquals("$t8", MIPSCompiler.Registers.get(8));
+        assertEquals("$t8", MIPSCompiler.Registers.fromNumber(8));
     }
 
     @Test
@@ -29,7 +29,7 @@ class MIPSCompilerTest {
 
     @Test
     void testFinal() {
-        assertEquals("$t10", MIPSCompiler.Registers.get(26));
+        assertEquals("$t10", MIPSCompiler.Registers.fromNumber(26));
     }
 
     @Test
@@ -215,16 +215,13 @@ class MIPSCompilerTest {
         List<Identifier> identifiers = new ArrayList<>();
 
         identifiers.add(new Identifier("x"));
-        identifiers.add(new Identifier("y"));
-        statements.add(new Assign(identifiers.get(0), new IntExpression(0)));
-        statements.add(new Assign(identifiers.get(1), new IntExpression(100)));
-        statements.add(new While(
-            new Condition(BinaryOp.Eq, new Expressions(
+        statements.add(new Assign(identifiers.get(0), new IntExpression(1)));
+        statements.add(new Assign(identifiers.get(0), new FunctionExpression(new Identifier("plus"),
+            new Expressions(
                 new FunctionExpression(identifiers.get(0), null),
-                new FunctionExpression(identifiers.get(1), null)
-            )),
-            new Statements(new Assign(identifiers.get(0), new IntExpression(100)))
-        ));
+                new IntExpression(10)
+            )
+        )));
 
         methods.add(new Method(
             new Identifier("main"),
@@ -239,7 +236,7 @@ class MIPSCompilerTest {
         comp.visit(p);
 
         ClassLoader classLoader = getClass().getClassLoader();
-        Scanner scanner = new Scanner(classLoader.getResourceAsStream("while.asm"));
+        Scanner scanner = new Scanner(classLoader.getResourceAsStream("builtin.asm"));
         String expected = scanner.useDelimiter("\\A").next();
         assertEquals(expected, comp.toString());
     }
