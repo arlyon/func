@@ -1,19 +1,21 @@
 package func.visitors;
 
 import func.syntax.*;
+import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
 import func.syntax.exp.IntExpression;
-import func.syntax.statement.Assign;
-import func.syntax.statement.If;
-import func.syntax.statement.Statements;
-import func.syntax.statement.While;
+import func.syntax.statement.*;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
+import static func.Func.builtins;
 
 /**
  * Prunes the syntax tree, removing dead code.
@@ -25,74 +27,105 @@ import java.util.Map;
 public class CleanTree implements ASTVisitor<AST> {
     @Override
     public AST visit(Assign cmd) {
-        return null;
+        cmd.expression = (Expression) cmd.expression.accept(this);
+        return cmd;
     }
 
     @Override
     public AST visit(If cmd) {
-        return null;
+        cmd.then = this.visit(cmd.then);
+        cmd.otherwise = this.visit(cmd.otherwise);
+        return cmd;
     }
 
     @Override
     public AST visit(While cmd) {
-        return null;
+        cmd.statements = this.visit(cmd.statements);
+        return cmd;
     }
 
     @Override
     public AST visit(Read cmd) {
-        return null;
+        return cmd;
     }
 
     @Override
     public AST visit(Write cmd) {
-        return null;
+        return cmd;
     }
 
     @Override
     public AST visit(Expressions expressions) {
-        return null;
+        expressions.expressions = expressions.expressions.stream()
+            .map(e -> (Expression) e.accept(this))
+            .collect(Collectors.toList());
+        return expressions;
     }
 
     @Override
     public AST visit(IntExpression intExpression) {
-        return null;
+        return intExpression;
     }
 
     @Override
-    public AST visit(FunctionExpression functionExpression) {
-        return null;
+    public Expression visit(FunctionExpression functionExpression) {
+        // calculate constants
+        if (functionExpression.expressions != null && builtins.contains(functionExpression.id)) {
+            if (functionExpression.expressions.expressions.stream().anyMatch(x -> !(x instanceof IntExpression))) return functionExpression;
+            BiFunction<Integer, Integer, Integer> op = null;
+            switch (functionExpression.id.name) {
+                case "plus": op = (x,y) -> x+y; break;
+                case "minus": op = (x,y) -> x-y; break;
+                case "times": op = (x,y) -> x*y; break;
+                case "divide": op = (x,y) -> x*y; break;
+            }
+            return new IntExpression(op.apply(
+                ((IntExpression) functionExpression.expressions.expressions.get(0)).integer,
+                ((IntExpression) functionExpression.expressions.expressions.get(1)).integer
+            ));
+        }
+        return functionExpression;
     }
 
     @Override
-    public AST visit(Statements statements) {
-        return null;
+    public Statements visit(Statements statements) {
+        statements.statements = statements.statements.stream()
+            .map(s -> (Statement) s.accept(this))
+            .collect(Collectors.toList());
+        return statements;
     }
 
     @Override
     public AST visit(Arguments arguments) {
-        return null;
+        return arguments;
     }
 
     @Override
-    public AST visit(Condition condition) {
-        return null;
+    public Condition visit(Condition condition) {
+        return condition;
     }
 
     @Override
-    public AST visit(Identifier identifier) {
-        return null;
+    public Identifier visit(Identifier identifier) {
+        return identifier;
     }
 
     @Override
     public Method visit(Method method) {
+        method.statements.statements = method.statements.statements.stream()
+            .map(s -> (Statement) s.accept(this))
+            .collect(Collectors.toList());
         return method;
     }
 
+    /**
+     * Cleans duplicate functions from the tree
+     */
     @Override
     public Methods visit(Methods methods) {
         Map<String, Method> methodNames = new HashMap<>();
         for (Method m : methods.methods) {
-            methodNames.put(m.id.name, m);
+            methodNames.put(m.id.name, this.visit(m));
         }
         methods.methods = new ArrayList<>(methodNames.values());
         return methods;

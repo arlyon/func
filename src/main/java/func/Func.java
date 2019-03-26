@@ -180,6 +180,9 @@ public class Func implements Callable<Void> {
             System.err.println(fv.getErrors().stream().map(err -> "\t" + err).collect(Collectors.joining("\n")));
         }
 
+        CleanTree ct = new CleanTree();
+        program = ct.visit(program);
+
         if (errors) {
             System.exit(1);
         }
