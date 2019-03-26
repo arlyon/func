@@ -17,7 +17,7 @@ import java.util.*;
 
 /**
  * Ensures that function pointers are not assigned
- * to variableCount and also that function calls have
+ * to vars and also that function calls have
  * the correct number of arguments.
  */
 public class TypeChecker implements ASTVisitor<Void> {

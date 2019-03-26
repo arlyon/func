@@ -23,9 +23,19 @@ task readme(type: Copy) {
     into file("$buildDir/readme.md")
 }
 
+task changelog(type: Copy) {
+    from file("changelog.md")
+    into file("$buildDir/changelog.md")
+}
+
+task license(type: Copy) {
+    from file("license.md")
+    into file("$buildDir/license.md")
+}
+
 // helper function to extract changelog data for a specific version
 ext.getChangelog = { version ->
-    String changelog = file('./changelog.txt').text
+    String changelog = file('./changelog.md').text
     def lines = []
     def complete = null
 
@@ -35,7 +45,7 @@ ext.getChangelog = { version ->
         } else if (line =~ /version/) {
             complete = true
         } else if (!complete && line != "") {
-            lines.push(line.replaceFirst(" {4}", ""))
+            lines.push(line)
         }
     }
 
@@ -45,9 +55,9 @@ ext.getChangelog = { version ->
 distributions {
     main {
         contents {
-            from(readme) {
-                into '.'
-            }
+            from(readme) { into '.' }
+            from(changelog) { into '.' }
+            from(license) { into '.' }
         }
     }
 }

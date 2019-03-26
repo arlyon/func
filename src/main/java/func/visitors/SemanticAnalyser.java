@@ -146,7 +146,7 @@ public class SemanticAnalyser implements ASTVisitor<Boolean> {
                 List<AST> elems = new LinkedList<>();
                 elems.add(method);
                 elems.addAll(intersection);
-                error("Must not declare the same identifier in both the args and the variableCount.", elems.toArray(new AST[]{}));
+                error("Must not declare the same identifier in both the args and the vars.", elems.toArray(new AST[]{}));
             }
         }
 
@@ -159,7 +159,7 @@ public class SemanticAnalyser implements ASTVisitor<Boolean> {
         if (method.vars != null) {
             variables += method.vars.identifiers.size();
             if (variables >= 8)
-                error("Cannot declare functions with more than 8 total variableCount.", method);
+                error("Cannot declare functions with more than 8 total vars.", method);
         }
 
         if (method.statements != null) this.visit(method.statements);

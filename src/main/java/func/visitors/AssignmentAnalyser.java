@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import static func.Func.builtins;
 
 /**
- * Analyses the syntax tree and finds all the places where variableCount are used before they are assigned to.
+ * Analyses the syntax tree and finds all the places where vars are used before they are assigned to.
  */
 public class AssignmentAnalyser implements ASTVisitor<Boolean> {
 
