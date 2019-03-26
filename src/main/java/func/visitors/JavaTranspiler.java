@@ -4,10 +4,6 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import func.syntax.*;
-import func.syntax.bop.Eq;
-import func.syntax.bop.Less;
-import func.syntax.bop.LessEq;
-import func.syntax.bop.NEq;
 import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
@@ -20,7 +16,6 @@ import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
 import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -99,7 +94,7 @@ public class JavaTranspiler implements ASTVisitor<String> {
 
     @Override
     public String visit(Write write) {
-        return "write("+write.exp.accept(this)+")";
+        return "write(" + write.exp.accept(this) + ")";
     }
 
     @Override
@@ -125,27 +120,7 @@ public class JavaTranspiler implements ASTVisitor<String> {
 
     @Override
     public String visit(Statements statements) {
-        return statements.statements.stream().map(x -> x.accept(this)+";").collect(Collectors.joining("\n"));
-    }
-
-    @Override
-    public String visit(Eq eq) {
-        return "==";
-    }
-
-    @Override
-    public String visit(Less less) {
-        return "<";
-    }
-
-    @Override
-    public String visit(LessEq lessEq) {
-        return "<=";
-    }
-
-    @Override
-    public String visit(NEq nEq) {
-        return "!=";
+        return statements.statements.stream().map(x -> x.accept(this) + ";").collect(Collectors.joining("\n"));
     }
 
     @Override
@@ -157,7 +132,22 @@ public class JavaTranspiler implements ASTVisitor<String> {
     public String visit(Condition condition) {
         Expression left = condition.exps.expressions.get(0);
         Expression right = condition.exps.expressions.get(1);
-        return left.accept(this) + " " + condition.bop.accept(this) + " " + right.accept(this);
+        String symbol = null;
+        switch (condition.bop) {
+            case Eq:
+                symbol = "==";
+                break;
+            case Less:
+                symbol = "<";
+                break;
+            case LessEq:
+                symbol = "<=";
+                break;
+            case NEq:
+                symbol = "!=";
+                break;
+        }
+        return left.accept(this) + " " + symbol + " " + right.accept(this);
     }
 
     @Override
@@ -166,7 +156,9 @@ public class JavaTranspiler implements ASTVisitor<String> {
     }
 
     @Override
-    public String visit(Method method) { return this.visit(method, "method"); }
+    public String visit(Method method) {
+        return this.visit(method, "method");
+    }
 
     public String visit(Method method, String template) {
         Map<String, String> context = new HashMap<>();
@@ -198,7 +190,7 @@ public class JavaTranspiler implements ASTVisitor<String> {
             .map(this::visit)
             .collect(Collectors.joining("\n\n"));
 
-        Map<String,String> vars = new HashMap<>();
+        Map<String, String> vars = new HashMap<>();
         vars.put("fileName", name);
         vars.put("methods", methods);
 

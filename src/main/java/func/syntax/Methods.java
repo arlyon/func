@@ -1,7 +1,6 @@
 package func.syntax;
 
 import func.visitors.ASTPrinter;
-import func.visitors.ASTVisitor;
 import lombok.AllArgsConstructor;
 
 import java.util.List;

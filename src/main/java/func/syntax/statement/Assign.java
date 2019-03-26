@@ -1,6 +1,6 @@
 package func.syntax.statement;
 
-import func.visitors.ASTVisitor;
+import func.syntax.ASTVisitor;
 import func.syntax.Identifier;
 import func.syntax.exp.Expression;
 import func.visitors.ASTPrinter;

@@ -1,6 +1,6 @@
 package func.syntax.exp;
 
-import func.visitors.ASTVisitor;
+import func.syntax.ASTVisitor;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
 

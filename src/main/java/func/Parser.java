@@ -1,7 +1,8 @@
 package func;
 
+import func.errors.MatchError;
+import func.errors.SyntaxError;
 import func.syntax.*;
-import func.syntax.bop.*;
 import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
@@ -192,17 +193,6 @@ public class Parser {
      */
     public Program program() {
         Methods methods = this.methods();
-
-        Optional<Method> main = methods.methods.stream().filter(method -> method.id.name.equals("main")).findFirst();
-        if (main.isPresent()) {
-            Method m = main.get();
-            if (m.args != null || m.ret != null) {
-                error("Main function must have no arguments or return values.");
-            }
-        } else {
-            error("Program must have a main function.");
-        }
-
         return new Program(methods);
     }
 
@@ -383,13 +373,13 @@ public class Parser {
     public BinaryOp bop() throws SyntaxError {
         switch (this.iterator.next().type) {
             case LESS:
-                return new Less();
+                return BinaryOp.Less;
             case LESSEQ:
-                return new LessEq();
+                return BinaryOp.LessEq;
             case EQ:
-                return new Eq();
+                return BinaryOp.Eq;
             case NEQ:
-                return new NEq();
+                return BinaryOp.NEq;
             default:
                 throw new MatchError("Unrecognised binary operator", iterator.previous());
         }
@@ -414,7 +404,7 @@ public class Parser {
         return new FunctionExpression(x, exps);
     }
 
-    private Expressions functionApplication() throws SyntaxError, MatchError {
+    private Expressions functionApplication() throws SyntaxError {
         this.match(LPAR);
         Expressions e = this.expressions();
         this.take(Token.Type.RPAR);

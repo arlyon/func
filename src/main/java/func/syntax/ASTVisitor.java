@@ -1,14 +1,12 @@
-package func.visitors;
+package func.syntax;
 
-import func.syntax.*;
-import func.syntax.bop.Eq;
-import func.syntax.bop.Less;
-import func.syntax.bop.LessEq;
-import func.syntax.bop.NEq;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
 import func.syntax.exp.IntExpression;
-import func.syntax.statement.*;
+import func.syntax.statement.Assign;
+import func.syntax.statement.If;
+import func.syntax.statement.Statements;
+import func.syntax.statement.While;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
@@ -30,14 +28,6 @@ public interface ASTVisitor<T> {
     T visit(FunctionExpression functionExpression);
 
     T visit(Statements statements);
-
-    T visit(Eq eq);
-
-    T visit(Less less);
-
-    T visit(LessEq lessEq);
-
-    T visit(NEq nEq);
 
     T visit(Arguments arguments);
 

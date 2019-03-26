@@ -1,8 +1,7 @@
 package func.syntax.statement;
 
-import func.visitors.ASTVisitor;
+import func.syntax.ASTVisitor;
 import func.syntax.Condition;
-import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -12,9 +11,7 @@ public class While extends Statement {
 
     @Override
     public String toString() {
-        ASTPrinter p = new ASTPrinter();
-        p.visit(this);
-        return p.toString();
+        return "while "+cond.toString();
     }
 
     @Override

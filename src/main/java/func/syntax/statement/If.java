@@ -1,6 +1,6 @@
 package func.syntax.statement;
 
-import func.visitors.ASTVisitor;
+import func.syntax.ASTVisitor;
 import func.syntax.Condition;
 import func.visitors.ASTPrinter;
 import lombok.AllArgsConstructor;

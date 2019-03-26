@@ -1,9 +1,10 @@
 package func;
 
+import func.syntax.BinaryOp;
+import func.errors.MatchError;
 import func.syntax.Arguments;
 import func.syntax.Condition;
 import func.syntax.Method;
-import func.syntax.bop.Eq;
 import func.syntax.statement.Assign;
 import func.syntax.statement.If;
 import func.syntax.statement.Statements;
@@ -214,7 +215,7 @@ public class ParserTest {
 
         Condition b = p.cond();
         Assertions.assertEquals(1, p.getErrors().size());
-        Assertions.assertEquals(Eq.class, b.bop.getClass());
+        Assertions.assertEquals(BinaryOp.Eq, b.bop);
         Assertions.assertEquals(1, b.exps.expressions.size());
     }
 

@@ -1,10 +1,11 @@
 package func.syntax;
 
 import func.visitors.ASTPrinter;
-import func.visitors.ASTVisitor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Identifier extends AST {
 
     public String name;

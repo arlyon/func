@@ -1,5 +1,6 @@
 package func;
 
+import func.errors.SyntaxError;
 import func.syntax.Program;
 import func.visitors.ASTPrinter;
 import org.junit.jupiter.params.ParameterizedTest;

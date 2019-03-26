@@ -1,18 +1,16 @@
-package func;
+package func.errors;
 
+import func.Token;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
-
-public class SyntaxError extends RuntimeException {
-    public final String message;
+public class SyntaxError extends CompileError {
     public Token[] token;
 
     public SyntaxError(String message, Token... tokens) {
-        this.message = message;
+        super(message);
         this.token = tokens;
     }
 

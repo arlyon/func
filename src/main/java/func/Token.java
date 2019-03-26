@@ -17,10 +17,10 @@ import lombok.RequiredArgsConstructor;
 public class Token {
 
     public final Type type;
-    String lexeme;
-    int column;
-    int row;
-    int length;
+    public String lexeme;
+    public int column;
+    public int row;
+    public int length;
 
     @Override
     public String toString() {

@@ -1,7 +1,6 @@
 package func.visitors;
 
 import func.syntax.*;
-import func.syntax.bop.*;
 import func.syntax.exp.Expression;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
@@ -127,33 +126,8 @@ public class ASTPrinter implements ASTVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(Eq eq) {
-        visit((BinaryOp) eq);
-        return null;
-    }
-
-    @Override
-    public Void visit(Less less) {
-        visit((BinaryOp) less);
-        return null;
-    }
-
-    @Override
-    public Void visit(LessEq lessEq) {
-        visit((BinaryOp) lessEq);
-        return null;
-    }
-
-    @Override
-    public Void visit(NEq nEq) {
-        visit((BinaryOp) nEq);
-        return null;
-    }
-
     public Void visit(BinaryOp eq) {
-        String name = eq.getClass().getSimpleName();
-        builder.append(name.substring(0, 1).toLowerCase()).append(name.substring(1));
+        builder.append(eq);
         return null;
     }
 

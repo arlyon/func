@@ -1,0 +1,10 @@
+method main() vars a
+begin
+    a := 5;
+    if eq(a, 5)
+    then
+        write 1;
+    else
+        write 0;
+    endif;
+endmethod;

@@ -1,0 +1,11 @@
+method main() vars inp, res
+begin
+	read inp;
+	res:=0;
+	while less(0,inp)
+	begin
+		res := plus(res,inp);
+		inp := minus(inp,1);
+	endwhile;
+	write res;
+endmethod;

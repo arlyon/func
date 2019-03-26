@@ -1,15 +1,14 @@
 package func;
 
+import func.syntax.Identifier;
 import func.syntax.Program;
-import func.visitors.JavaTranspiler;
-import func.visitors.MIPSCompiler;
+import func.visitors.*;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 import java.io.*;
@@ -17,8 +16,9 @@ import java.math.BigInteger;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -28,6 +28,12 @@ import java.util.stream.Collectors;
  */
 @Command(name = "func", mixinStandardHelpOptions = true, version = "functools version 1.3.0")
 public class Func implements Callable<Void> {
+
+    public static final AbstractList<Identifier> builtins = new ArrayList<>(Arrays.asList(
+        new Identifier("plus"), new Identifier("minus"),
+        new Identifier("times"), new Identifier("divide")
+    ));
+
     public static void main(String[] args) {
         CommandLine.call(new Func(), args);
     }
@@ -87,7 +93,7 @@ public class Func implements Callable<Void> {
     )
     void compile(
         @Parameters(paramLabel = "<infile>", description = "read input from file") File inFile,
-        @Option(names = "-o", required = true, paramLabel = "<outfile>", description = "direct output to file. if exporting a JVM file, the extension will be stripped") File outFile,
+        @Option(names = "-o", paramLabel = "<outfile>", description = "direct output to file. if exporting a JVM file, the extension will be stripped") File outFile,
         @Option(names = "-t", paramLabel = "<format>", description = "the format of the output: ${COMPLETION-CANDIDATES} (defaults to MIPS)", defaultValue = "MIPS") OutputFormat outputFormat
     ) {
         InputStream in = getInputStream(inFile);
@@ -95,11 +101,11 @@ public class Func implements Callable<Void> {
 
         String outputCode = null;
         switch (outputFormat) {
-//            case MIPS:
-//                MIPSCompiler mc = new MIPSCompiler();
-//                mc.visit(program);
-//                outputCode = mc.toString();
-//                break;
+            case MIPS:
+                MIPSCompiler mc = new MIPSCompiler();
+                mc.visit(program);
+                outputCode = mc.toString();
+                break;
             case JVM:
             case JAVA:
                 String fileName = outFile.getName().contains(".") ? outFile.getName().split("\\.")[0] : outFile.getName();
@@ -108,7 +114,7 @@ public class Func implements Callable<Void> {
                 if (outputFormat == OutputFormat.JVM) {
                     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
                     JavaTranspiler.JavaSource source = new JavaTranspiler.JavaSource(fileName, outputCode);
-                    String[] options = new String[] { "-d", outFile.getAbsoluteFile().getParent() };
+                    String[] options = new String[]{"-d", outFile.getAbsoluteFile().getParent()};
                     Iterable<? extends JavaFileObject> fileObjects = Arrays.asList(source);
                     StringWriter output = new StringWriter();
                     boolean succ = compiler.getTask(output, null, null, Arrays.asList(options), null, fileObjects).call();
@@ -140,14 +146,41 @@ public class Func implements Callable<Void> {
         }
     }
 
-    private Program parseProgram(InputStream stream) {
+    public static Program parseProgram(InputStream stream) {
         Lexer symbols = new Lexer(new InputStreamReader(stream));
         Parser p = new Parser(symbols);
+        boolean errors = false;
         Program program = p.program();
 
         if (p.hasErrors()) {
-            System.err.println("There are syntax errors with your program.");
-            System.err.println(p.getErrors().stream().map(Objects::toString).collect(Collectors.joining("\n")));
+            errors = true;
+            System.err.println("There are syntax errors with your program:");
+            System.err.println(p.getErrors().stream().map(err -> "\t" + err).collect(Collectors.joining("\n")));
+        }
+
+        SemanticAnalyser sa = new SemanticAnalyser();
+        if (!program.accept(sa)) {
+            errors = true;
+            System.err.println("There are semantic errors with your program:");
+            System.err.println(sa.getErrors().stream().map(err -> "\t" + err).collect(Collectors.joining("\n")));
+        }
+
+        AssignmentAnalyser aa = new AssignmentAnalyser();
+        if (!program.accept(aa)) {
+            errors = true;
+            System.err.println("There are assignment errors with your program:");
+            System.err.println(aa.getErrors().stream().map(err -> "\t" + err).collect(Collectors.joining("\n")));
+        }
+
+        TypeChecker fv = new TypeChecker();
+        program.accept(fv);
+        if (fv.getErrors().size() > 0) {
+            errors = true;
+            System.err.println("There are type errors with your program:");
+            System.err.println(fv.getErrors().stream().map(err -> "\t" + err).collect(Collectors.joining("\n")));
+        }
+
+        if (errors) {
             System.exit(1);
         }
 
@@ -166,6 +199,6 @@ public class Func implements Callable<Void> {
     }
 
     private enum OutputFormat {
-        JVM, JAVA
+        JVM, JAVA, MIPS
     }
 }

@@ -1,9 +1,7 @@
 package func.syntax;
 
-import func.syntax.bop.BinaryOp;
 import func.syntax.exp.Expressions;
 import func.visitors.ASTPrinter;
-import func.visitors.ASTVisitor;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
