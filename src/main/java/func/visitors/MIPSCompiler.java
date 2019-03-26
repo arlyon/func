@@ -16,12 +16,9 @@ import func.syntax.statement.Statements;
 import func.syntax.statement.While;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,7 +26,7 @@ import static func.Func.builtins;
 
 public class MIPSCompiler implements ASTVisitor<Void> {
 
-    private List<SemanticError> errors = new LinkedList<>();
+    private final List<SemanticError> errors = new LinkedList<>();
 
     static class SysCalls {
         static final int PRINT_INT = 1; // a0 = integer to print
@@ -39,15 +36,15 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     }
 
     static class Registers {
-        static String[] ZERO = {"$zero"};
-        static String[] PSEUDO = {"$at"};
-        static String[] RETURN = generateRegisters("$v", 0, 1);
-        static String[] ARGUMENTS = generateRegisters("$a", 0, 3);
-        static String[] EVAL = generateRegisters("$t", 8, 9);
-        static String[] CALLEE = generateRegisters("$s", 0, 7);
-        static String[] TEMP = generateRegisters("$t", 0, 7);
+        static final String[] ZERO = {"$zero"};
+        static final String[] PSEUDO = {"$at"};
+        static final String[] RETURN = generateRegisters("$v", 0, 1);
+        static final String[] ARGUMENTS = generateRegisters("$a", 0, 3);
+        static final String[] EVAL = generateRegisters("$t", 8, 9);
+        static final String[] CALLEE = generateRegisters("$s", 0, 7);
+        static final String[] TEMP = generateRegisters("$t", 0, 7);
 
-        private static String[][] REGISTERS = {ZERO, PSEUDO, RETURN, ARGUMENTS, EVAL, CALLEE, TEMP};
+        private final static String[][] REGISTERS = {ZERO, PSEUDO, RETURN, ARGUMENTS, EVAL, CALLEE, TEMP};
 
         public static String[] registers() {
             return Arrays.stream(REGISTERS).flatMap(Arrays::stream).toArray(String[]::new);
@@ -70,7 +67,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
         private static String[] generateRegisters(String ident, int min, int max) {
             int registerCount = max - min + 1;
             String[] registers = new String[registerCount];
-            for (Integer i = 0; i < registerCount; i++) {
+            for (int i = 0; i < registerCount; i++) {
                 registers[i] = ident + (min + i);
             }
             return registers;
@@ -190,7 +187,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Expressions expressions) {
-        throw new NotImplementedException(); // handled by function expression
+        return null; // handled by function expression
     }
 
     /**
@@ -320,7 +317,7 @@ public class MIPSCompiler implements ASTVisitor<Void> {
 
         // store previous s-registers
         if (!method.id.name.equals("main")) {
-            builder.append("\t# function "+method.id.name+" load\n");
+            builder.append("\t# function ").append(method.id.name).append(" load\n");
             pushRegister("$ra");
             int argCount = method.args != null ? method.args.identifiers.size() : 0;
             for (int i = 0; i < registers; i++) {
@@ -332,17 +329,17 @@ public class MIPSCompiler implements ASTVisitor<Void> {
             }
         }
 
-        builder.append("\t# function "+method.id.name+" begin\n");
+        builder.append("\t# function ").append(method.id.name).append(" begin\n");
         this.visit(method.statements);
 
         if (method.ret != null) {
             int register = frame.find(method.ret);
-            builder.append("\tmove " + Registers.RETURN[0] + ", " + Registers.fromNumber(register) + "\n");
+            builder.append("\tmove ").append(Registers.RETURN[0]).append(", ").append(Registers.fromNumber(register)).append("\n");
         }
 
         // load previous s-registers
         if (!method.id.name.equals("main")) {
-            builder.append("\t# function " + method.id.name + " unload\n");
+            builder.append("\t# function ").append(method.id.name).append(" unload\n");
             for (int i = registers - 1; i >= 0; i--) {
                 popRegister(Registers.get(Registers.CALLEE[i]));
             }

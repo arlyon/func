@@ -22,7 +22,7 @@ public class AssignmentAnalyser implements ASTVisitor<Boolean> {
 
     private final List<Identifier> globalScope = new ArrayList<>(builtins);
     private Set<Identifier> assigned;
-    private List<SemanticError> errors = new LinkedList<>();
+    private final List<SemanticError> errors = new LinkedList<>();
 
     private SemanticError error(String message, AST... nodes) {
         SemanticError e = new SemanticError(message, nodes);

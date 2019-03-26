@@ -1,14 +1,13 @@
 package func;
 
-import func.syntax.BinaryOp;
 import func.errors.MatchError;
 import func.syntax.Arguments;
+import func.syntax.BinaryOp;
 import func.syntax.Condition;
 import func.syntax.Method;
 import func.syntax.exp.FunctionExpression;
 import func.syntax.statement.Assign;
 import func.syntax.statement.If;
-import func.syntax.statement.Statement;
 import func.syntax.statement.Statements;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -205,7 +204,7 @@ public class ParserTest {
 
         If s = (If) p.statement();
         Assertions.assertEquals(1, p.getErrors().size());
-        Assertions.assertEquals(null, s.otherwise);
+        Assertions.assertNull(s.otherwise);
         Assertions.assertEquals(1, s.then.statements.size());
     }
 

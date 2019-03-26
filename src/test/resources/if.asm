@@ -13,7 +13,7 @@ main:
 	move $t9, $s1
 	lw $t8, 0($sp)
 	addi $sp, $sp, 4
-	beq $t8, $t9, ift0
+	bne $t8, $t9, ift0
 	move $s0, $s1
 	j ife0
 ift0:

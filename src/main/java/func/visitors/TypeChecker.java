@@ -26,7 +26,7 @@ public class TypeChecker implements ASTVisitor<Void> {
 
     private class ReferenceFrame {
 
-        Map<Identifier, AST> variables = new HashMap<>();
+        final Map<Identifier, AST> variables = new HashMap<>();
         ReferenceFrame parent = null;
 
         public ReferenceFrame() {
@@ -59,7 +59,7 @@ public class TypeChecker implements ASTVisitor<Void> {
         }
     }
 
-    private List<SemanticError> errors = new LinkedList<>();
+    private final List<SemanticError> errors = new LinkedList<>();
 
     private SemanticError error(String message, AST... nodes) {
         SemanticError e = new SemanticError(message, nodes);

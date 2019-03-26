@@ -163,7 +163,7 @@ public class Parser {
 
         while (iterator.hasNext()) {
             t = iterator.next();
-            if (Arrays.asList(until).contains(t.type)) {
+            if (Objects.equals(until, t.type)) {
                 if (!errors.isEmpty()) {
                     error("Expected " + until + ", not", errors.toArray(new Token[]{}));
                 }
@@ -205,7 +205,6 @@ public class Parser {
     }
 
     public Method method() {
-        List<SyntaxError> errors = new ArrayList<>();
         this.take(Token.Type.METHOD);
         Identifier id = required(this::identifier);
         Arguments args = null;
@@ -218,10 +217,10 @@ public class Parser {
                 fastForward(RPAR);
                 this.take(RPAR);
             } catch (SyntaxError e) {
-                errors.add(error(e.message, e.token));
+                error(e.message, e.token);
             }
         } catch (SyntaxError e) {
-            errors.add(error(e.message, e.token));
+            error(e.message, e.token);
         }
 
         Arguments vars = optional(this::vars);

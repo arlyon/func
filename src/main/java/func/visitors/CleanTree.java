@@ -9,7 +9,6 @@ import func.syntax.statement.*;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -72,13 +71,22 @@ public class CleanTree implements ASTVisitor<AST> {
     public Expression visit(FunctionExpression functionExpression) {
         // calculate constants
         if (functionExpression.expressions != null && builtins.contains(functionExpression.id)) {
-            if (functionExpression.expressions.expressions.stream().anyMatch(x -> !(x instanceof IntExpression))) return functionExpression;
+            if (functionExpression.expressions.expressions.stream().anyMatch(x -> !(x instanceof IntExpression)))
+                return functionExpression;
             BiFunction<Integer, Integer, Integer> op = null;
             switch (functionExpression.id.name) {
-                case "plus": op = (x,y) -> x+y; break;
-                case "minus": op = (x,y) -> x-y; break;
-                case "times": op = (x,y) -> x*y; break;
-                case "divide": op = (x,y) -> x*y; break;
+                case "plus":
+                    op = (x, y) -> x + y;
+                    break;
+                case "minus":
+                    op = (x, y) -> x - y;
+                    break;
+                case "times":
+                    op = (x, y) -> x * y;
+                    break;
+                case "divide":
+                    op = (x, y) -> x * y;
+                    break;
             }
             return new IntExpression(op.apply(
                 ((IntExpression) functionExpression.expressions.expressions.get(0)).integer,

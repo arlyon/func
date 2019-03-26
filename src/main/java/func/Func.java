@@ -19,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -115,7 +116,7 @@ public class Func implements Callable<Void> {
                     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
                     JavaTranspiler.JavaSource source = new JavaTranspiler.JavaSource(fileName, outputCode);
                     String[] options = new String[]{"-d", outFile.getAbsoluteFile().getParent()};
-                    Iterable<? extends JavaFileObject> fileObjects = Arrays.asList(source);
+                    Iterable<? extends JavaFileObject> fileObjects = Collections.singletonList(source);
                     StringWriter output = new StringWriter();
                     boolean succ = compiler.getTask(output, null, null, Arrays.asList(options), null, fileObjects).call();
                     if (!succ) {

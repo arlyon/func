@@ -14,7 +14,7 @@ wls0:
 	move $t9, $s1
 	lw $t8, 0($sp)
 	addi $sp, $sp, 4
-	beq $t8, $t9, wle0
+	bne $t8, $t9, wle0
 	li $s0, 100
 	j wls0
 wle0:

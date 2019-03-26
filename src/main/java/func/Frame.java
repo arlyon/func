@@ -9,7 +9,7 @@ public class Frame {
     private final Frame parent;
     private final int start;
     private int tempCount;
-    private HashMap<Identifier, Integer> variables;
+    private final HashMap<Identifier, Integer> variables;
 
     private Frame(int start, Frame parent) {
         variables = new HashMap<>();

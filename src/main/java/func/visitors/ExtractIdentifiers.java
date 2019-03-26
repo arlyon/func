@@ -68,11 +68,8 @@ public class ExtractIdentifiers implements ASTVisitor<List<Identifier>> {
 
     @Override
     public List<Identifier> visit(FunctionExpression functionExpression) {
-        ArrayList<Identifier> list = new ArrayList<>();
-        list.addAll(functionExpression.id.accept(this));
-        if (functionExpression.expressions != null) {
-            list.addAll(functionExpression.expressions.accept(this));
-        }
+        List<Identifier> list = new ArrayList<>(functionExpression.id.accept(this));
+        if (functionExpression.expressions != null) list.addAll(functionExpression.expressions.accept(this));
         return list;
     }
 
