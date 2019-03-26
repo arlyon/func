@@ -1,6 +1,9 @@
 version 2.1.0
 
 	- rewrite the tree to pre-compute builtin operations
+	- rewrite the tree to move the main function first
+	- arbitrary function calls and recursion
+	- change the preprocessor to only accept 8 arguments
 	- fix conditionals (the were backwards!)
 
 version 2.0.0
