@@ -277,18 +277,19 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(Condition condition) {
         String instruction = null;
+        // our branch condition for ending the loop
         switch (condition.bop) {
             case Less:
-                instruction = "blt";
+                instruction = "bge";
                 break;
             case LessEq:
-                instruction = "ble";
+                instruction = "bgt";
                 break;
             case Eq:
-                instruction = "beq";
+                instruction = "bne";
                 break;
             case NEq:
-                instruction = "bne";
+                instruction = "beq";
                 break;
         }
         // todo store register
