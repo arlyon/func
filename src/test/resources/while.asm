@@ -3,8 +3,10 @@ sinp: .asciiz "enter > "
 	.text
 	.globl	main
 main:
+	# function main begin
 	li $s0, 0
 	li $s1, 100
+	# while loop: while eq(x, y)
 wls0:
 	move $t8, $s0
 	addi $sp, $sp, -4

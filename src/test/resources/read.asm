@@ -3,8 +3,9 @@ sinp: .asciiz "enter > "
 	.text
 	.globl	main
 main:
-	li $v0, 4
+	# function main begin
 	la $a0, sinp
+	li $v0, 4
 	syscall
 	li $v0, 5
 	syscall

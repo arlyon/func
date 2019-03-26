@@ -11,6 +11,7 @@ import func.syntax.statement.rw.Write;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -112,22 +113,30 @@ public class CleanTree implements ASTVisitor<AST> {
 
     @Override
     public Method visit(Method method) {
-        method.statements.statements = method.statements.statements.stream()
-            .map(s -> (Statement) s.accept(this))
-            .collect(Collectors.toList());
+        if (method.statements != null)
+            method.statements.statements = method.statements.statements.stream()
+                .map(s -> (Statement) s.accept(this))
+                .collect(Collectors.toList());
         return method;
     }
 
     /**
      * Cleans duplicate functions from the tree
+     * and puts the main method first.
      */
     @Override
     public Methods visit(Methods methods) {
         Map<String, Method> methodNames = new HashMap<>();
+        Method main = null;
         for (Method m : methods.methods) {
-            methodNames.put(m.id.name, this.visit(m));
+            if (m.id.name.equals("main")) main = m;
+            else methodNames.put(m.id.name, this.visit(m));
         }
-        methods.methods = new ArrayList<>(methodNames.values());
+
+        LinkedList<Method> cleanedMethods = new LinkedList<>();
+        cleanedMethods.addFirst(main);
+        cleanedMethods.addAll(methodNames.values());
+        methods.methods = cleanedMethods;
         return methods;
     }
 

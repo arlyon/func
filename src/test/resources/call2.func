@@ -1,0 +1,16 @@
+method one() vars x
+begin
+	x := two();
+	return x;
+endmethod;
+
+method two() vars x
+begin
+	x := 1;
+	return x;
+endmethod;
+
+method main()
+begin
+	write one();
+endmethod;

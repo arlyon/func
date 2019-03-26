@@ -18,8 +18,10 @@ import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,10 +44,10 @@ public class MIPSCompiler implements ASTVisitor<Void> {
         static String[] RETURN = generateRegisters("$v", 0, 1);
         static String[] ARGUMENTS = generateRegisters("$a", 0, 3);
         static String[] EVAL = generateRegisters("$t", 8, 9);
-        static String[] SAVED = generateRegisters("$s", 0, 7);
+        static String[] CALLEE = generateRegisters("$s", 0, 7);
         static String[] TEMP = generateRegisters("$t", 0, 7);
 
-        private static String[][] REGISTERS = {ZERO, PSEUDO, RETURN, ARGUMENTS, EVAL, SAVED, TEMP};
+        private static String[][] REGISTERS = {ZERO, PSEUDO, RETURN, ARGUMENTS, EVAL, CALLEE, TEMP};
 
         public static String[] registers() {
             return Arrays.stream(REGISTERS).flatMap(Arrays::stream).toArray(String[]::new);
@@ -93,24 +95,32 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     private StringBuilder builder;
 
     public MIPSCompiler() {
-        this.frame = new Frame(9);
+        this.frame = new Frame(Registers.get(Registers.CALLEE[0]));
         this.labelCounter = 0;
         this.builder = new StringBuilder();
+    }
+
+    private void pushRegister(int r) {
+        pushRegister(Registers.fromNumber(r));
     }
 
     /**
      * Pushes the value of a given register to the stack.
      */
-    private void pushRegister(int r) {
+    private void pushRegister(String reg) {
         builder.append("\taddi $sp, $sp, -4\n"); // decrement the stack pointer by a word
-        builder.append(String.format("\tsw %s, 0($sp)\n", Registers.fromNumber(r))); // store it into the register
+        builder.append(String.format("\tsw %s, 0($sp)\n", reg)); // store it into the register
+    }
+
+    private void popRegister(int r) {
+        popRegister(Registers.fromNumber(r));
     }
 
     /**
      * Pops a value off the stack (into the given register)
      */
-    private void popRegister(int r) {
-        builder.append(String.format("\tlw %s, 0($sp)\n", Registers.fromNumber(r))); // load the stack pointer
+    private void popRegister(String reg) {
+        builder.append(String.format("\tlw %s, 0($sp)\n", reg)); // load the stack pointer
         builder.append("\taddi $sp, $sp, 4\n"); // increment it by a word
     }
 
@@ -159,8 +169,8 @@ public class MIPSCompiler implements ASTVisitor<Void> {
             error("Variable to be read does not exist.");
 
         // print the input prompt
-        builder.append("\tli $v0, ").append(SysCalls.PRINT_STRING).append("\n");
         builder.append("\tla $a0, sinp\n");
+        builder.append("\tli $v0, ").append(SysCalls.PRINT_STRING).append("\n");
         builder.append("\tsyscall\n");
         // read the input
         builder.append("\tli $v0, ").append(SysCalls.READ_INT).append("\n");
@@ -172,8 +182,8 @@ public class MIPSCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(Write cmd) {
         registerDestination = Registers.get(Registers.ARGUMENTS[0]);
-        builder.append("\tli $v0, " + SysCalls.PRINT_INT + "\n");
         cmd.exp.accept(this);
+        builder.append("\tli $v0, " + SysCalls.PRINT_INT + "\n");
         builder.append("\tsyscall\n");
         return null;
     }
@@ -227,10 +237,18 @@ public class MIPSCompiler implements ASTVisitor<Void> {
 
         String builtinName = functionExpression.id.name;
         switch (builtinName) {
-            case "plus": command = "add"; break;
-            case "times": command = "mult"; break;
-            case "divide": command = "div"; break;
-            case "minus": command = "sub"; break;
+            case "plus":
+                command = "add";
+                break;
+            case "times":
+                command = "mult";
+                break;
+            case "divide":
+                command = "div";
+                break;
+            case "minus":
+                command = "sub";
+                break;
         }
 
         // we know from type checking that there are always 2 arguments
@@ -292,19 +310,42 @@ public class MIPSCompiler implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Method method) {
-        frame.register(method.id);
         builder.append(method.id.name).append(":\n");
-        frame = frame.push();
-        if (method.vars != null)
-            method.vars.identifiers.forEach(frame::register);
-        if (method.args != null)
-            method.args.identifiers.forEach(frame::register);
+        int registers = method.variables().size();
 
+        // create a new frame and add the registers
+        frame = frame.push();
+        method.variables().forEach(frame::register);
+
+        // store previous s-registers
+        if (!method.id.name.equals("main")) {
+            builder.append("\t# function "+method.id.name+" load\n");
+            pushRegister("$ra");
+            int argCount = method.args != null ? method.args.identifiers.size() : 0;
+            for (int i = 0; i < registers; i++) {
+                int dest = Registers.get(Registers.CALLEE[i]);
+                pushRegister(dest);
+                if (i < argCount) {
+                    builder.append("\tmove ").append(Registers.fromNumber(dest)).append(", ").append(Registers.ARGUMENTS[i]).append("\n");
+                }
+            }
+        }
+
+        builder.append("\t# function "+method.id.name+" begin\n");
         this.visit(method.statements);
 
         if (method.ret != null) {
             int register = frame.find(method.ret);
-            builder.append("\tmove $" + Registers.RETURN[0] + ", $" + Registers.fromNumber(register) + "\n");
+            builder.append("\tmove " + Registers.RETURN[0] + ", " + Registers.fromNumber(register) + "\n");
+        }
+
+        // load previous s-registers
+        if (!method.id.name.equals("main")) {
+            builder.append("\t# function " + method.id.name + " unload\n");
+            for (int i = registers - 1; i >= 0; i--) {
+                popRegister(Registers.get(Registers.CALLEE[i]));
+            }
+            popRegister("$ra");
         }
 
         if (method.id.name.equals("main")) {

@@ -277,7 +277,7 @@ public class Parser {
                 error(e.message, e.token);
             }
         }
-        if (statements.isEmpty()) throw error("No statements", this.iterator.hasNext() ? this.iterator.next() : null);
+        if (statements.isEmpty()) throw error("No statements", this.iterator.hasNext() ? this.peekBack() : null);
         return new Statements(statements);
     }
 
@@ -385,7 +385,7 @@ public class Parser {
         }
     }
 
-    private Expression expression() throws SyntaxError {
+    public Expression expression() throws SyntaxError {
         Token s = this.iterator.next();
         Token.Type t = s.type;
         this.iterator.previous();
@@ -414,12 +414,13 @@ public class Parser {
     private Expressions expressions() {
         List<Expression> exps = new ArrayList<>();
         while (this.iterator.hasNext()) {
-            exps.add(this.expression());
+            Expression e = this.expression();
+            if (e == null) break;
+            exps.add(e);
             if (this.iterator.next().type == Token.Type.COMMA) continue;
             this.iterator.previous();
             break;
         }
-        if (exps.isEmpty()) throw error("Empty list of expressions", this.iterator.previous());
         return new Expressions(exps);
     }
 

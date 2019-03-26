@@ -5,8 +5,10 @@ import func.errors.MatchError;
 import func.syntax.Arguments;
 import func.syntax.Condition;
 import func.syntax.Method;
+import func.syntax.exp.FunctionExpression;
 import func.syntax.statement.Assign;
 import func.syntax.statement.If;
+import func.syntax.statement.Statement;
 import func.syntax.statement.Statements;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -229,7 +231,7 @@ public class ParserTest {
         Condition b = p.cond();
         Assertions.assertEquals(3, p.getErrors().size());
         Assertions.assertNull(b.bop);
-        Assertions.assertEquals(1, b.exps.expressions.size());
+        Assertions.assertEquals(0, b.exps.expressions.size());
     }
 
     @Test
@@ -239,6 +241,17 @@ public class ParserTest {
         Parser p = new Parser(l);
 
         Condition b = p.cond();
+        Assertions.assertEquals(0, p.getErrors().size());
+    }
+
+    @Test
+    public void testFunction() {
+        String example = "pow()";
+        Lexer l = new Lexer(new StringReader(example));
+        Parser p = new Parser(l);
+
+        FunctionExpression s = (FunctionExpression) p.expression();
+        Assertions.assertEquals(0, s.expressions.expressions.size());
         Assertions.assertEquals(0, p.getErrors().size());
     }
 }

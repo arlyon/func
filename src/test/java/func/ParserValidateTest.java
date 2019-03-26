@@ -76,7 +76,6 @@ class ParserValidateTest {
         Program program = p.program();
         ASTPrinter printer = new ASTPrinter();
         printer.visit(program);
-        Assertions.assertEquals(printer.toString(), string);
-        Assertions.assertEquals(program.toString(), string);
+        Assertions.assertEquals(string, printer.toString());
     }
 }

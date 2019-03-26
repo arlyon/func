@@ -26,7 +26,6 @@ public class Frame {
         variables.put(variable, tempCount++);
     }
 
-
     public boolean exists(Identifier variable) {
         return variables.containsKey(variable);
     }

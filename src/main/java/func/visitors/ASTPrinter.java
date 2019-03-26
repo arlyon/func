@@ -93,7 +93,8 @@ public class ASTPrinter implements ASTVisitor<Void> {
             visit(expression);
             builder.append(", ");
         }
-        builder.delete(builder.length() - 2, builder.length());
+        if (expressions.expressions.size() > 0)
+            builder.delete(builder.length() - 2, builder.length());
         return null;
     }
 

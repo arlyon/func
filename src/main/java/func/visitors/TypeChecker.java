@@ -17,7 +17,7 @@ import java.util.*;
 
 /**
  * Ensures that function pointers are not assigned
- * to variables and also that function calls have
+ * to variableCount and also that function calls have
  * the correct number of arguments.
  */
 public class TypeChecker implements ASTVisitor<Void> {
@@ -85,22 +85,6 @@ public class TypeChecker implements ASTVisitor<Void> {
         if (cmd.expression instanceof FunctionExpression) {
             FunctionExpression fe = (FunctionExpression) cmd.expression;
             if (fe.expressions != null) {
-                // check function arguments
-                Method calling = (Method) frame.find(fe.id);
-                if (fe.expressions.expressions.size() != calling.args.identifiers.size())
-                    error("Attempting to call function with " + fe.expressions.expressions.size() + " arguments, expected " + calling.args.identifiers.size() + ":", calling);
-
-                // check types are ints
-                for (Expression e : fe.expressions.expressions) {
-                    if (e instanceof FunctionExpression) {
-                        FunctionExpression funcArg = (FunctionExpression) e;
-                        if (funcArg.expressions == null && !(frame.find(funcArg.id) instanceof IntExpression)) {
-                            error("Functions may only accept int types", calling, funcArg);
-                        }
-                    }
-                }
-
-                // the type of the called function is an int
                 srcType = new IntExpression(-1);
             } else {
                 srcType = frame.find(fe.id);
@@ -132,11 +116,19 @@ public class TypeChecker implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Read cmd) {
+        this.visit(new Assign(cmd.id, new IntExpression(-1)));
         return null;
     }
 
     @Override
     public Void visit(Write cmd) {
+        if (cmd.exp instanceof FunctionExpression) {
+            FunctionExpression fe = (FunctionExpression) cmd.exp;
+            if (fe.expressions == null) {
+                if (!(frame.find(fe.id) instanceof IntExpression))
+                    error("The write keyword may only accept integer types", cmd);
+            }
+        }
         return null;
     }
 
@@ -150,16 +142,33 @@ public class TypeChecker implements ASTVisitor<Void> {
         return null;
     }
 
+    /**
+     * Checks that a function call has the right number of
+     * arguments and that it is calling a function variable.
+     */
     @Override
     public Void visit(FunctionExpression functionExpression) {
         if (functionExpression.expressions != null) {
             AST ast = frame.find(functionExpression.id);
             if (!(ast instanceof Method)) {
-                // calling a non-method variable!
+                error("Trying to call a non-function: ", ast);
             } else {
                 Method m = (Method) ast;
-                if (functionExpression.expressions.expressions.size() != m.args.identifiers.size()) {
-                    // differing arguments!
+                int arguments = functionExpression.expressions.expressions.size();
+                int parameters = m.args != null ? m.args.identifiers.size() : 0;
+
+                if (arguments != parameters) {
+                    error("Attempting to call function with " + arguments + " arguments, expected " + parameters + ":", m);
+                }
+
+                // check types are ints
+                for (Expression e : functionExpression.expressions.expressions) {
+                    if (e instanceof FunctionExpression) {
+                        FunctionExpression funcArg = (FunctionExpression) e;
+                        if (funcArg.expressions == null && !(frame.find(funcArg.id) instanceof IntExpression)) {
+                            error("Functions may only accept int types", m, funcArg);
+                        }
+                    }
                 }
             }
         }
@@ -192,12 +201,12 @@ public class TypeChecker implements ASTVisitor<Void> {
     @Override
     public Void visit(Method method) {
         this.frame = this.frame.push();
-        this.frame.register(method.id, method);
         if (method.args != null)
             method.args.identifiers.forEach(i -> this.frame.register(i, new IntExpression(-1)));
-        method.statements.accept(this);
-        if (!(this.frame.find(method.ret) instanceof IntExpression)) {
-            // error?
+        if (method.statements != null)
+            method.statements.accept(this);
+        if (method.ret != null && !(this.frame.find(method.ret) instanceof IntExpression)) {
+            error("Attempting to return a non-int value", method, method.ret);
         }
         this.frame.pop();
         return null;
@@ -216,6 +225,7 @@ public class TypeChecker implements ASTVisitor<Void> {
         frame.register(new Identifier("plus"), new Method(new Identifier("plus"), new Arguments(new Identifier("x"), new Identifier("y")), null, null, null));
         frame.register(new Identifier("minus"), new Method(new Identifier("minus"), new Arguments(new Identifier("x"), new Identifier("y")), null, null, null));
         frame.register(new Identifier("divide"), new Method(new Identifier("divide"), new Arguments(new Identifier("x"), new Identifier("y")), null, null, null));
+        program.methods.methods.forEach(m -> frame.register(m.id, m));
         program.methods.accept(this);
         return null;
     }

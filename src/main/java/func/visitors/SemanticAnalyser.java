@@ -5,7 +5,10 @@ import func.syntax.*;
 import func.syntax.exp.Expressions;
 import func.syntax.exp.FunctionExpression;
 import func.syntax.exp.IntExpression;
-import func.syntax.statement.*;
+import func.syntax.statement.Assign;
+import func.syntax.statement.If;
+import func.syntax.statement.Statements;
+import func.syntax.statement.While;
 import func.syntax.statement.rw.Read;
 import func.syntax.statement.rw.Write;
 
@@ -110,9 +113,11 @@ public class SemanticAnalyser implements ASTVisitor<Boolean> {
     @Override
     public Boolean visit(Method method) {
         ExtractIdentifiers extractIdentifiers = new ExtractIdentifiers();
-        List<Identifier> usedIdentifiers = method.statements.statements.stream()
-            .flatMap(statement -> statement.accept(extractIdentifiers).stream())
-            .collect(Collectors.toList());
+        List<Identifier> usedIdentifiers = new LinkedList<>();
+        if (method.statements != null)
+            usedIdentifiers.addAll(method.statements.statements.stream()
+                .flatMap(statement -> statement.accept(extractIdentifiers).stream())
+                .collect(Collectors.toList()));
 
         if (method.ret != null)
             usedIdentifiers.addAll(method.ret.accept(extractIdentifiers));
@@ -141,19 +146,23 @@ public class SemanticAnalyser implements ASTVisitor<Boolean> {
                 List<AST> elems = new LinkedList<>();
                 elems.add(method);
                 elems.addAll(intersection);
-                error("Must not declare the same identifier in both the args and the variables.", elems.toArray(new AST[]{}));
+                error("Must not declare the same identifier in both the args and the variableCount.", elems.toArray(new AST[]{}));
             }
         }
 
-        if (method.args != null && method.args.identifiers.size() > 4) {
-            error("Cannot declare functions with more than 4 arguments.", method);
+        int variables = 0;
+        if (method.args != null) {
+            variables += method.args.identifiers.size();
+            if (variables > 4) error("Cannot declare functions with more than 4 arguments.", method);
         }
 
-        if (method.vars != null && method.vars.identifiers.size() > 8) {
-            error("Cannot declare functions with more than 8 variables.", method);
+        if (method.vars != null) {
+            variables += method.vars.identifiers.size();
+            if (variables >= 8)
+                error("Cannot declare functions with more than 8 total variableCount.", method);
         }
 
-        this.visit(method.statements);
+        if (method.statements != null) this.visit(method.statements);
 
         return this.errors.isEmpty();
     }

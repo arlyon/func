@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import static func.Func.builtins;
 
 /**
- * Analyses the syntax tree and finds all the places where variables are used before they are assigned to.
+ * Analyses the syntax tree and finds all the places where variableCount are used before they are assigned to.
  */
 public class AssignmentAnalyser implements ASTVisitor<Boolean> {
 
@@ -91,7 +91,8 @@ public class AssignmentAnalyser implements ASTVisitor<Boolean> {
 
     @Override
     public Boolean visit(FunctionExpression functionExpression) {
-        if (!assigned.contains(functionExpression.id)) error("Identifier used before being assigned", functionExpression.id);
+        if (!assigned.contains(functionExpression.id))
+            error("Identifier used before being assigned", functionExpression.id);
         if (functionExpression.expressions != null)
             functionExpression.expressions.accept(this);
         return errors.isEmpty();
@@ -126,9 +127,10 @@ public class AssignmentAnalyser implements ASTVisitor<Boolean> {
         this.assigned = new HashSet<>(globalScope);
         if (method.args != null) assigned.addAll(method.args.identifiers);
 
-        for (Statement s : method.statements.statements) {
-            s.accept(this);
-        }
+        if (method.statements != null)
+            for (Statement s : method.statements.statements) {
+                s.accept(this);
+            }
 
         if (method.ret != null)
             method.ret.accept(this);

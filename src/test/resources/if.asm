@@ -3,8 +3,10 @@ sinp: .asciiz "enter > "
 	.text
 	.globl	main
 main:
+	# function main begin
 	li $s0, 0
 	li $s1, 1
+	# if statement: if eq(x, y)
 	move $t8, $s0
 	addi $sp, $sp, -4
 	sw $t8, 0($sp)

@@ -3,6 +3,7 @@ sinp: .asciiz "enter > "
 	.text
 	.globl	main
 main:
+	# function main begin
 	li $s0, 1
 	move $t8, $s0
 	li $t9, 10

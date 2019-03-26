@@ -20,4 +20,26 @@ public class IntegrationTest {
         String expected = scanner.useDelimiter("\\A").next();
         assertEquals(expected, comp.toString());
     }
+
+    @Test
+    void testCall() {
+        ClassLoader classLoader = getClass().getClassLoader();
+        Program p = Func.parseProgram(classLoader.getResourceAsStream("call.func"));
+        MIPSCompiler comp = new MIPSCompiler();
+        comp.visit(p);
+        Scanner scanner = new Scanner(classLoader.getResourceAsStream("call.asm"));
+        String expected = scanner.useDelimiter("\\A").next();
+        assertEquals(expected, comp.toString());
+    }
+
+    @Test
+    void testRecursion() {
+        ClassLoader classLoader = getClass().getClassLoader();
+        Program p = Func.parseProgram(classLoader.getResourceAsStream("call2.func"));
+        MIPSCompiler comp = new MIPSCompiler();
+        comp.visit(p);
+        Scanner scanner = new Scanner(classLoader.getResourceAsStream("call2.asm"));
+        String expected = scanner.useDelimiter("\\A").next();
+        assertEquals(expected, comp.toString());
+    }
 }
